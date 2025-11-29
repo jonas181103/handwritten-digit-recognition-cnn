@@ -1,0 +1,18 @@
+# Kern-Bibliotheken für das DL Projekt
+
+# TensorFlow: Zentrales Element für das CNN-Modell und das Training
+tensorflow>=2.0.0
+
+# Numpy: Datenverarbeitung
+numpy
+
+# Unterstützende Bibliotheken
+
+# Visualisierung der der Loss- und Accuracy-Funktion
+matplotlib
+
+# tabellarische Ausgabe der Ergebnisse
+pandas
+
+# Berechnung von Metriken und Konfusionsmatrix
+scikit-learn
