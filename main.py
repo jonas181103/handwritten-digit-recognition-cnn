@@ -2,7 +2,7 @@ import numpy
 import scipy.special  # Sigmoid-Funktion
 
 
-# Neuronales Netz Klassen Defintion
+# Neuronales Netz Klassen Definition
 class NeuralNetwork:
 
     # Initialisierung des neuronalen Netzes
@@ -28,7 +28,21 @@ class NeuralNetwork:
         pass
 
     # Training des neuronalen Netzes
-    def train():
+    def train(self, inputs_list, targets_list):
+        # inputs in ein 2D überführen
+        inputs = numpy.array(inputs_list, ndmin=2).T
+        targets = numpy.array(targets_list, ndmin=2).T
+        # Signale in die versteckte Schicht berechnen
+        hidden_inputs = numpy.dot(self.wih, inputs)
+        # Signale aus der versteckten Schicht heraus berechnen
+        hidden_outputs = self.activation_function(hidden_inputs)
+        # Signale in den Output-Layer hinein berechnen
+        final_inputs = numpy.dot(self.who, hidden_outputs)
+        # Signale berechnen, die den Output-Layer verlassen
+        final_outputs = self.activation_function(final_inputs)
+
+        # Den Fehler zwischen Soll und Ist berechnen
+        output_errors = targets - final_outputs
         pass
 
     # Abfrage des neuronalen Netzes (übernimmt die Eingabe in das neuronale Netz und liefert die Ausgabe des Netzes zurück)
@@ -54,4 +68,4 @@ learning_rate = 0.3
 
 n = NeuralNetwork(input_nodes, hidden_nodes, output_nodes, learning_rate)
 
-print(numpy.random.rand(3, 3) - 0.5)
+print(n.query([1.0, 0.5, -1.5]))
