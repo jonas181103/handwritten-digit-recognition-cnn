@@ -7,14 +7,14 @@ class NeuralNetwork:
 
     # Initialisierung des neuronalen Netzes
     def __init__(self, inputnodes, hiddennodes, outputnodes, learningrate):
-        # Anzahl der Knoten in der Eingabeschicht, versteckten Schicht und Ausgabeschicht
+        # Anzahl der Knoten in der Eingabeschicht, der versteckten Schicht und Ausgabeschicht
         self.inodes = inputnodes
         self.hnodes = hiddennodes
         self.onodes = outputnodes
         # Initialisierung der Gewichtungsmatrizen des neuronalen Netzes (wih und who) mit kleinen zufälligen Werten zwischen -0.5 und 0.5
-        # Zufällig, um die Symmetrie der Eingaben zu verhindern
+        # Zufällig um die Symmetrie der Eingaben zu verhindern
         # Ausgangspunkt für die Backpropagation
-        # Die Funktion entnimmt Stichproben aus einer Normalverteilung
+        # die Funktion entnimmt Stichproben aus einer Normalverteilung
         # Parameter: Mittelwert der Verteilung (0.0), Standardabweichung, Größe eines numpy-Arrays
         self.wih = numpy.random.normal(
             0.0, pow(self.hnodes, -0.5), (self.hnodes, self.inodes)
@@ -41,8 +41,23 @@ class NeuralNetwork:
         # Signale berechnen, die den Output-Layer verlassen
         final_outputs = self.activation_function(final_inputs)
 
-        # Den Fehler zwischen Soll und Ist berechnen
+        # Den Fehler zwischen Soll-Ergebnis und Ist-Ergebnis berechnen
         output_errors = targets - final_outputs
+        # Backpropagierung: Fehler werden entsprechend der Verbindungsgewichte aufgeteilt
+        # und für jeden Knoten der versteckten Schicht entsprechend zusammengefasst
+        hidden_errors = numpy.dot(self.who.T, output_errors)
+
+        # Aktualisierung der Gewichte zwischen den Verbindungen der versteckten Schicht und der Ausgabeschicht
+        # Genauer: Lernrate self.lr wird mit dem Rest multipliziert; numpy.dot() für Matrizenmultiplikation
+        self.who += self.lr * numpy.dot(
+            (output_errors * final_outputs * (1.0 - final_outputs)),
+            numpy.transpose(hidden_outputs),
+        )
+        # Aktualisierung der Gewichte zwischen den Verbindungen der Eingabeschicht und der versteckten Schicht
+        self.wih += self.lr * numpy.dot(
+            (hidden_errors * hidden_outputs * (1.0 - hidden_outputs)),
+            numpy.transpose(inputs),
+        )
         pass
 
     # Abfrage des neuronalen Netzes (übernimmt die Eingabe in das neuronale Netz und liefert die Ausgabe des Netzes zurück)
