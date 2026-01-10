@@ -107,3 +107,5 @@ train_neuralnetwork()
 # Testdatensatz einlesen (Besteht aus einer CSV mit einer Zahl und einem Bild für die Zahl pro Zeile)
 test_list = read_dataset("data/raw/mnist_data/Testdaten/mnist_test_10.csv")
 test_neuralnetwork(test_list)
+
+#test commit
