@@ -1,4 +1,4 @@
-import matplotlib
+import matplotlib.pyplot as plt
 import numpy
 import scipy.special  # Sigmoid-Funktion
 
@@ -7,7 +7,7 @@ import scipy.special  # Sigmoid-Funktion
 class NeuralNetwork:
 
     # Initialisierung des neuronalen Netzes
-    def __init__(self, inputnodes, hiddennodes, outputnodes, learningrate):
+    def __init__(self, inputnodes = 784, hiddennodes = 600, outputnodes = 10, learningrate = 0.3):
         # Anzahl der Knoten in der Eingabeschicht, der versteckten Schicht und Ausgabeschicht
         self.inodes = inputnodes
         self.hnodes = hiddennodes
@@ -75,14 +75,13 @@ class NeuralNetwork:
         final_outputs = self.activation_function(final_inputs)
         return final_outputs
 
-
-# 1. Versuch ein kleines neuronales Netzobjekt zu erstellen mit 3 Knoten in jeder Schicht und einer Lernrate von 0,3
-input_nodes = 3
-hidden_nodes = 3
-output_nodes = 3
-learning_rate = 0.3
-
-n = NeuralNetwork(input_nodes, hidden_nodes, output_nodes, learning_rate)
+def calcNodeCount(input_nodes:int, output_nodes:int, learningrate:float = 0.3):
+    """Berechne die Anzahl der Nodes für das neuronale Netzwerk anhand von Input und Output."""
+    input_nodes = input_nodes
+    hidden_nodes = int((input_nodes+output_nodes)//(3/2))
+    output_nodes = output_nodes
+    learning_rate = learningrate
+    return input_nodes, hidden_nodes, output_nodes, learning_rate
 
 # Testnetzwerk
 data_file = open("data/raw/mnist_data/Testdaten/mnist_test_10.csv", "r")
@@ -93,10 +92,15 @@ data_file.close()
 print(len(data_list))
 print(data_list[1])
 
-all_values = data_list[9].split(",")
+all_values = data_list[1].split(",")
 image_array = numpy.asarray(all_values[1:], dtype="float").reshape((28, 28))
-matplotlib.pyplot.imshow(image_array, cmap="Greys", interpolation="None")
-matplotlib.pyplot.show()
+plt.imshow(image_array, cmap="Greys", interpolation="None")
+plt.show()
 
-n.query((numpy.asarray(all_values[1:]) /255.0 * 0.99) + 0.01)
-# hallo
+pixel = len(all_values[1:])
+input_nodes, hidden_nodes, output_nodes, learning_rate = calcNodeCount(pixel,10)
+print(input_nodes, hidden_nodes, output_nodes, learning_rate)
+n = NeuralNetwork(input_nodes, hidden_nodes, output_nodes, learning_rate)
+
+#output = n.query((numpy.asarray(all_values[1:], dtype="float") / 255.0 * 0.99) + 0.01)
+#print(output)
