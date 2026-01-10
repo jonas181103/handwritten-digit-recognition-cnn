@@ -59,8 +59,12 @@ class NeuralNetwork:
         )
         pass
 
-    # Abfrage des neuronalen Netzes (übernimmt die Eingabe in das neuronale Netz und liefert die Ausgabe des Netzes zurück)
     def query(self, inputs_list):
+        """Abfrage des neuronalen Netzes (übernimmt die Eingabe in das neuronale Netz und liefert die Ausgabe des Netzes zurück)
+
+        Output:
+        Liefert ein Tupel der Ausgabe zurück (Anzahl der Elemente hängt von der Anzahl der Output Layers ab)
+        """
         # Konvertierung der Eingaben in einen 2D-Array
         inputs = numpy.array(inputs_list, ndmin=2).T
         # Berechnung der Signale in die versteckten Schichten hinein

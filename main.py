@@ -13,24 +13,30 @@ def initiateNeuralNetwork(input_nodes:int, output_nodes:int, learningrate:float 
     neural_network = NeuralNetwork.NeuralNetwork(input_nodes, hidden_nodes, output_nodes, learning_rate)
     return neural_network
 
-# Testnetzwerk
+# Testdatensatz einlesen (Besteht aus einer CSV mit einer Zahl und einem Bild für die Zahl pro Zeile)
 data_file = open("data/raw/mnist_data/Testdaten/mnist_test_10.csv", "r")
 
 data_list = data_file.readlines()
 data_file.close()
+pixel_values = data_list[1].split(",")
 
 print(len(data_list))
 print(data_list[1])
 
-all_values = data_list[1].split(",")
-image_array = numpy.asarray(all_values[1:], dtype="float").reshape((28, 28))
+# Anzeige der Zahl mit Matplotlib
+image_array = numpy.asarray(pixel_values[1:], dtype="float").reshape((28, 28))
 plt.imshow(image_array, cmap="Greys", interpolation="None")
 plt.show()
 
 # Erzeuge neuronales Netzwerkobjekt n mit der Anzahl der Pixel als Anzahl der Nodes im Input Layer
-pixel = len(all_values[1:])
+n_pixel = len(pixel_values[1:])
 n_output = len(data_list)
-n = initiateNeuralNetwork(pixel, n_output)
+n = initiateNeuralNetwork(n_pixel, n_output)
 
-output = n.query((numpy.asarray(all_values[1:], dtype="float") / 255.0 * 0.99) + 0.01)
+# Neuronales Netzwerk trainieren
+
+
+""" So kann man das neuronale Netzwerk "befragen"
+output = n.query((numpy.asarray(pixel_values[1:], dtype="float") / 255.0 * 0.99) + 0.01)
 print(output)
+"""
