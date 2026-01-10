@@ -1,24 +1,23 @@
-# Implementierung eines Faltungsnetzwerks (CNN) zur Klassifikation handschriftlicher Ziffern
+# Implementierung eines Convolutional-Neural-Networks  (CNN) zur Klassifikation handschriftlicher Ziffern
 
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue)](https://www.python.org/)
-[![TensorFlow](https://img.shields.io/badge/TensorFlow-2.x-orange)](https://www.tensorflow.org/)
-[![Status](https://img.shields.io/badge/Status-Abgeschlossen-success)]()
+[![Status](https://img.shields.io/badge/Status-Work_in_Progress-orange)]()
 
 ---
 
 ### 1. Projektübersicht
 
 Dieses Projekt dient der **automatisierten Erkennung und Klassifikation handschriftlicher Ziffern (0-9)**. Es
-demonstriert die Anwendung von **Deep Learning** und speziell eines **Convolutional Neural Network (CNN)**,
-implementiert unter Einhaltung akademischer Kriterien der Code-Qualität und Codestruktur (darunter objektorientierte
-Programmierung, Generatoren und umfassende Dokumentation).
+demonstriert die Anwendung von **Deep Learning** und speziell eines **Convolutional Neural Network (CNN)**.
 
 ### 1.1 Technische Kernelemente
 
 * **Architektur:** Convolutional Neural Network (CNN)
 * **Datensatz:** MNIST (Modified National Institute of Standards and Technology)
 * **Programmiersprache:** Python
-* **Frameworks:** TensorFlow / Keras
+
+### 1.2 Projektmanagement
+[Zum Jira Kanban Board](https://handwritten-digit-recognition-cnn.atlassian.net/jira/software/projects/HDRC/boards/1)
 
 ---
 
