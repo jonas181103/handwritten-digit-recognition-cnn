@@ -1,3 +1,4 @@
+import matplotlib
 import numpy
 import scipy.special  # Sigmoid-Funktion
 
