@@ -98,3 +98,4 @@ matplotlib.pyplot.imshow(image_array, cmap="Greys", interpolation="None")
 matplotlib.pyplot.show()
 
 n.query((numpy.asarray(all_values[1:]) /255.0 * 0.99) + 0.01)
+# hallo
