@@ -11,6 +11,7 @@ numpy
 # Visualisierung der der Loss- und Accuracy-Funktion
 matplotlib
 
+
 # tabellarische Ausgabe der Ergebnisse
 pandas
 
