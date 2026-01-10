@@ -83,4 +83,19 @@ learning_rate = 0.3
 
 n = NeuralNetwork(input_nodes, hidden_nodes, output_nodes, learning_rate)
 
-print(n.query([1.0, 0.5, -1.5]))
+# Testnetzwerk
+data_file = open("data/raw/mnist_data/Testdaten/mnist_test_10.csv", "r")
+
+data_list = data_file.readlines()
+data_file.close()
+
+print(len(data_list))
+print(data_list[1])
+
+all_values = data_list[9].split(",")
+image_array = numpy.asarray(all_values[1:], dtype="float").reshape((28, 28))
+matplotlib.pyplot.imshow(image_array, cmap="Greys", interpolation="None")
+matplotlib.pyplot.show()
+
+n.query((numpy.asarray(all_values[1:]) /255.0 * 0.99) + 0.01)
+# hallo
