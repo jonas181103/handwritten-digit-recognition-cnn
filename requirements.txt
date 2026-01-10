@@ -16,4 +16,6 @@ pandas
 
 # Berechnung von Metriken und Konfusionsmatrix
 scikit-learn
+
+# Scipy
 scipy
