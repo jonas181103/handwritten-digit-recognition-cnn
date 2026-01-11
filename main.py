@@ -1,8 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy
 import src.NeuralNetwork as NeuralNetwork
-import scipy.special  # Sigmoid-Funktion
-
+#import scipy.special  # Sigmoid-Funktion
 
 def initiate_neuralnetwork(input_nodes:int, output_nodes:int, learningrate:float = 0.3):
     """Berechne die Anzahl der Nodes für das neuronale Netzwerk anhand von Input und Output und
@@ -47,7 +46,7 @@ def ask_neuralnetwork(pixel_values, display:bool = True, print_output:bool = Tru
     if print_output:
         counter = 0
         for value in outputs:
-            print(f"Number: {counter} with certainty {value[0]:%}")
+            print(f"Number: {counter} with certainty {value[0]:.2%}")
             counter += 1
 
     # Das Label zurückgeben (Was das CNN denkt, der Wert ist)
@@ -76,7 +75,9 @@ def test_neuralnetwork(test_dataset):
         pass
     # calculate the performance score, the fraction of correct answers
     scorecard_array = numpy.asarray(scorecard)
-    print(f"Performance = {(scorecard_array.sum() / scorecard_array.size):.2%}\n")
+    performance = numpy.mean(scorecard_array)
+    print(f"Performance = {performance:.2%}\n")
+    return performance
 
 def read_dataset(file_path:str):
     """Auslesen des Datensatzes mit Fehlerbehandlung. Erwartet wird eine CSV-Datei,
@@ -108,4 +109,5 @@ train_neuralnetwork()
 test_list = read_dataset("data/raw/mnist_data/Testdaten/mnist_test_10.csv")
 test_neuralnetwork(test_list)
 
-#test commit
+"""To-Do: Trainierte CNN speichern und einlesen"""
+
