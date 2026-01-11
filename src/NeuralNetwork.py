@@ -77,4 +77,24 @@ class NeuralNetwork:
         final_outputs = self.activation_function(final_inputs)
         return final_outputs
 
+    def save_weights(self, filename="brain.npz"):
+        """Speichert die aktuellen Gewichtsmatrizen komprimiert in eine .npz Datei."""
+        try:
+            # savez_compressed statt savez
+            numpy.savez_compressed(filename, wih=self.wih, who=self.who)
+            print(f"Gespeichert unter {filename}")
+        except IOError as e:
+            print(f"Fehler beim Speichern unter '{filename}': {e}")
 
+    def load_weights(self, filename="brain.npz"):
+        """Lädt die Gewichtsmatrizen aus einer .npz Datei."""
+        try:
+            # load funktioniert für .npy und .npz automatisch
+            data = numpy.load(filename)
+            self.wih = data['wih']
+            self.who = data['who']
+            print(f"Geladen von {filename}")
+        except FileNotFoundError:
+            print(f"Fehler: Datei '{filename}' wurde nicht gefunden.")
+        except IOError as e:
+            print(f"Fehler beim Laden von '{filename}': {e}")

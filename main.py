@@ -1,15 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy
 import src.NeuralNetwork as NeuralNetwork
-import re
+import src.REPatternMatcher as REPM
 #import scipy.special  # Sigmoid-Funktion
 
-class REqual(str):
-    """Override str.__eq__ to match a regex pattern.
-    Source: https://discuss.python.org/t/structural-pattern-matching-should-permit-regex-string-matches/22700/9
-    """
-    def __eq__(self, pattern):
-        return re.fullmatch(pattern, self)
+__author__ = "Jonas Ott, Simon Wameling, ..."
 
 def initiate_neuralnetwork(input_nodes:int, output_nodes:int, learningrate:float = 0.3):
     """Berechne die Anzahl der Nodes für das neuronale Netzwerk anhand von Input und Output und
@@ -113,9 +108,9 @@ n_output = 10
 n = initiate_neuralnetwork(n_pixel, n_output)
 
 # 2. MAIN LOOP
-while(True):
+while True:
     user_input = input(f"What do you want to do? [Train|Test|End]\n")
-    match REqual(user_input):
+    match REPM.REqual(user_input):
         case r'^[T|t]rain':
             # Neuronales Netzwerk trainieren
             train_neuralnetwork()
