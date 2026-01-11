@@ -134,10 +134,10 @@ def print_help():
         "Description": [
             "Trains the network",
             "Tests the network with test data",
-            "Speichert das aktuelle Netzwerk in 'models/'",
-            "Lädt ein Netzwerk aus 'models/'",
-            "Beendet das Programm",
-            "Zeigt diese Liste an"
+            "Saves the neural networks' weights in 'models/'",
+            "Loads the weights in 'models/'",
+            "Exits the program",
+            "Shows the help"
         ]
     }
 

@@ -1,0 +1,4 @@
+# Ignores the models in this folder
+*
+# To not ignore this file itself
+!.gitignore
