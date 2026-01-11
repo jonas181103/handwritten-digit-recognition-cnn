@@ -9,7 +9,7 @@ numpy
 matplotlib
 
 # tabellarische Ausgabe der Ergebnisse (WIP)
-# pandas
+pandas
 
 # Berechnung von Metriken und Konfusionsmatrix
 scikit-learn

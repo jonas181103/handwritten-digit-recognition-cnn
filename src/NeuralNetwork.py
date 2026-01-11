@@ -77,16 +77,16 @@ class NeuralNetwork:
         final_outputs = self.activation_function(final_inputs)
         return final_outputs
 
-    def save_weights(self, filename="brain.npz", path="models/"):
+    def save_weights(self, filename="weights.npz", path="models/"):
         """Speichert die aktuellen Gewichtsmatrizen komprimiert in eine .npz Datei."""
         try:
             # savez_compressed statt savez
             numpy.savez_compressed(path + filename, wih=self.wih, who=self.who)
-            print(f"Saved {filename}")
+            print(f"Saved as {filename}")
         except IOError as e:
             print(f"Error {e.strerror} while trying to save '{e.filename}'")
 
-    def load_weights(self, filename="brain.npz", path="models/"):
+    def load_weights(self, filename="weights.npz", path="models/"):
         """Lädt die Gewichtsmatrizen aus einer .npz Datei."""
         try:
             # load funktioniert für .npy und .npz automatisch
