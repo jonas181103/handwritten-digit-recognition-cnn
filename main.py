@@ -109,17 +109,21 @@ n = initiate_neuralnetwork(n_pixel, n_output)
 
 # 2. MAIN LOOP
 while True:
-    user_input = input(f"What do you want to do? [Train|Test|End]\n")
-    match REPM.REqual(user_input):
-        case r'^[T|t]rain':
-            # Neuronales Netzwerk trainieren
-            train_neuralnetwork()
-        case r'^[T|t]est':
-            # Neuronales Netzwerk testen
-            # Testdatensatz einlesen (Besteht aus einer CSV mit einer Zahl und einem Bild für die Zahl pro Zeile)
-            test_list = read_dataset("data/raw/mnist_data/Testdaten/mnist_train_100.csv")
-            test_neuralnetwork(test_list)
-        case r'^[E|e]nd':
-            exit(0)
-        case _:
-            print(f"Command not recognized: {user_input}")
+    try:
+        user_input = input(f"What do you want to do? [Train|Test|End]\n")
+        match REPM.REqual(user_input):
+            case r'^[T|t]rain':
+                # Neuronales Netzwerk trainieren
+                train_neuralnetwork()
+            case r'^[T|t]est':
+                # Neuronales Netzwerk testen
+                # Testdatensatz einlesen (Besteht aus einer CSV mit einer Zahl und einem Bild für die Zahl pro Zeile)
+                test_list = read_dataset("data/raw/mnist_data/Testdaten/mnist_test_10.csv")
+                test_neuralnetwork(test_list)
+            case r'^[E|e]nd|^[E|e]xit':
+                exit(0)
+            case _:
+                print(f"Command not recognized: {user_input}")
+    except KeyboardInterrupt:
+        print(f"User interrupted")
+        exit(0)

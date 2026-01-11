@@ -77,24 +77,24 @@ class NeuralNetwork:
         final_outputs = self.activation_function(final_inputs)
         return final_outputs
 
-    def save_weights(self, filename="brain.npz"):
+    def save_weights(self, filename="brain.npz", path="models/"):
         """Speichert die aktuellen Gewichtsmatrizen komprimiert in eine .npz Datei."""
         try:
             # savez_compressed statt savez
-            numpy.savez_compressed(filename, wih=self.wih, who=self.who)
-            print(f"Gespeichert unter {filename}")
+            numpy.savez_compressed(path + filename, wih=self.wih, who=self.who)
+            print(f"Saved {filename}")
         except IOError as e:
-            print(f"Fehler beim Speichern unter '{filename}': {e}")
+            print(f"Error {e.strerror} while trying to save '{e.filename}'")
 
-    def load_weights(self, filename="brain.npz"):
+    def load_weights(self, filename="brain.npz", path="models/"):
         """Lädt die Gewichtsmatrizen aus einer .npz Datei."""
         try:
             # load funktioniert für .npy und .npz automatisch
-            data = numpy.load(filename)
+            data = numpy.load(path + filename)
             self.wih = data['wih']
             self.who = data['who']
-            print(f"Geladen von {filename}")
-        except FileNotFoundError:
-            print(f"Fehler: Datei '{filename}' wurde nicht gefunden.")
+            print(f"File {filename} was loaded")
+        except FileNotFoundError as e:
+            print(f"Error {e.strerror}: File '{e.filename}' not found")
         except IOError as e:
-            print(f"Fehler beim Laden von '{filename}': {e}")
+            print(f"Unexpected error {e.strerror} while loading '{e.filename}'")
