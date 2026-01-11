@@ -76,3 +76,5 @@ class NeuralNetwork:
         # Berechnung der Signale aus der Ausgabeschicht hinaus
         final_outputs = self.activation_function(final_inputs)
         return final_outputs
+
+

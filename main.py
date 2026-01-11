@@ -1,7 +1,15 @@
 import matplotlib.pyplot as plt
 import numpy
 import src.NeuralNetwork as NeuralNetwork
+import re
 #import scipy.special  # Sigmoid-Funktion
+
+class REqual(str):
+    """Override str.__eq__ to match a regex pattern.
+    Source: https://discuss.python.org/t/structural-pattern-matching-should-permit-regex-string-matches/22700/9
+    """
+    def __eq__(self, pattern):
+        return re.fullmatch(pattern, self)
 
 def initiate_neuralnetwork(input_nodes:int, output_nodes:int, learningrate:float = 0.3):
     """Berechne die Anzahl der Nodes für das neuronale Netzwerk anhand von Input und Output und
@@ -95,19 +103,28 @@ def read_dataset(file_path:str):
         exit(1)
     return data_list
 
+"""To-Do: Trainierte CNN speichern und einlesen (optional)"""
+
+# 1. INIT
 # Erzeuge neuronales Netzwerkobjekt n mit der Anzahl der Pixel als Anzahl der Nodes im Input Layer.
 # Wir setzen voraus, dass alle Bilder die gleiche Größe haben und eine Zahl von 0 bis 9 gefunden werden soll
 n_pixel = 784
 n_output = 10
 n = initiate_neuralnetwork(n_pixel, n_output)
 
-# Neuronales Netzwerk trainieren
-train_neuralnetwork()
-
-# Neuronales Netzwerk testen
-# Testdatensatz einlesen (Besteht aus einer CSV mit einer Zahl und einem Bild für die Zahl pro Zeile)
-test_list = read_dataset("data/raw/mnist_data/Testdaten/mnist_test_10.csv")
-test_neuralnetwork(test_list)
-
-"""To-Do: Trainierte CNN speichern und einlesen"""
-
+# 2. MAIN LOOP
+while(True):
+    user_input = input(f"What do you want to do? [Train|Test|End]\n")
+    match REqual(user_input):
+        case r'^[T|t]rain':
+            # Neuronales Netzwerk trainieren
+            train_neuralnetwork()
+        case r'^[T|t]est':
+            # Neuronales Netzwerk testen
+            # Testdatensatz einlesen (Besteht aus einer CSV mit einer Zahl und einem Bild für die Zahl pro Zeile)
+            test_list = read_dataset("data/raw/mnist_data/Testdaten/mnist_train_100.csv")
+            test_neuralnetwork(test_list)
+        case r'^[E|e]nd':
+            exit(0)
+        case _:
+            print(f"Command not recognized: {user_input}")
