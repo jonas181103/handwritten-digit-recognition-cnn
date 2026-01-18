@@ -11,8 +11,49 @@ __sources__ = "Inspiration für REPatternMatcher: https://discuss.python.org/t/s
 
 # Globale Variablen für Pfade und Dateien, die häufiger verwendet werden
 MODELS_DIR = "models"
-TRAIN_DATASET = "data/raw/mnist_data/Testdaten/mnist_train_100.csv"
-TEST_DATASET = "data/raw/mnist_data/Testdaten/mnist_test_10.csv"
+VISUALIZATION_DIR = "data/visualisation"
+TRAIN_DATASET = "data/raw/mnist_data/testdaten/mnist_train_100.csv"
+TEST_DATASET = "data/raw/mnist_data/testdaten/mnist_test_10.csv"
+
+# Lernfortschritt als Diagramm anzeigen
+def create_plot(accuracy_dictionary):
+    if not accuracy_dictionary:
+        print("Keine Daten zum Visualisieren vorhanden.")
+        return
+
+    # Daten aus dem Dictionary extrahieren und nach Epochen sortieren
+    epochs_sorted = sorted(accuracy_dictionary.keys())
+    performances = [accuracy_dictionary[a] for a in epochs_sorted]
+
+    # Layout des Diagramms
+    plt.figure(figsize=(10, 6))
+
+    # 3. Die Kurve zeichnen mit 'epoch' auf der X-Achse, 'performance' auf der Y-Achse
+    plt.plot(epochs_sorted, performances,
+             marker='o',  # Punkte an den Datenwerten
+             linestyle='-',  # Durchgezogene Linie
+             color='#2ecc71',  # Farbe Grün
+             linewidth=2,
+             label='Accuracy')
+
+    # Titel und Beschriftungen
+    plt.title('Lernfortschritt des Neuronalen Netzes', fontsize=14)
+    plt.xlabel('Epoche', fontsize=12)
+    plt.ylabel('Genauigkeit (Performance)', fontsize=12)
+    # Gitter im Hintergrund für eine bessere Lesbarkeit
+    plt.grid(True, linestyle='--', alpha=0.6)
+    # Legende anzeigen
+    plt.legend()
+    # Als Bild speichern
+    try:
+        plt.savefig(VISUALIZATION_DIR + "accuracy_trend.png")
+    except FileNotFoundError as e:
+        print(f"Error: {e.strerror} for path: {e.filename}. \n")
+    except IOError as e:
+        print(f"Unexpected Error: {e.strerror} for path: {e.filename}.")
+        exit(1)
+    plt.show()
+
 
 def initiate_neuralnetwork(input_nodes:int, output_nodes:int, learning_rate:float = 0.3):
     """Berechne die Anzahl der Nodes für das neuronale Netzwerk anhand von Input und Output und
@@ -183,7 +224,12 @@ while True:
                     for epoch in range(epochs):
                         train_neuralnetwork(epochs=1, print_output=False)
                         accuracy = test_neuralnetwork(read_dataset(TEST_DATASET), False)
-                        accuracy_data.update({epoch: accuracy})
+                        accuracy_data[epoch] = accuracy
+
+                        print(f"Epoch {epoch}: Accuracy = {accuracy:.5f}")
+
+                    create_plot(accuracy_data)
+
                     # Visualisieren
                     for epoch, accuracy in accuracy_data.items():
                         print(f"Epoch: {epoch}, Accuracy: {accuracy}")
