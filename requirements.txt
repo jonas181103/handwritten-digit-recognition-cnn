@@ -14,6 +14,9 @@ pandas
 # Scipy
 scipy
 
+# Image loading
+pillow
+
 # Standard Bibliotheken:
 # re
 # os
