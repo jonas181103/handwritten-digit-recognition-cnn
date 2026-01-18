@@ -7,6 +7,7 @@ import pandas as pd
 #import scipy.special  # Sigmoid-Funktion
 
 __author__ = "Jonas Ott, Simon Wameling, ..."
+__sources__ = "Inspiration für REPatternMatcher: https://discuss.python.org/t/structural-pattern-matching-should-permit-regex-string-matches/22700/9"
 
 # Globale Variablen für Pfade und Dateien, die häufiger verwendet werden
 MODELS_DIR = "models"
