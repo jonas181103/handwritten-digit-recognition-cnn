@@ -1,0 +1,7 @@
+# Ignores the models in this folder
+*
+# To not ignore this file itself
+!.gitignore
+!nothing.png
+!4.png
+!0.png
