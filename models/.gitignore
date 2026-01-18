@@ -2,3 +2,5 @@
 *
 # To not ignore this file itself
 !.gitignore
+!trained.npz
+!untrained.npz
