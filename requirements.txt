@@ -11,8 +11,9 @@ matplotlib
 # tabellarische Ausgabe der Ergebnisse (WIP)
 pandas
 
-# Berechnung von Metriken und Konfusionsmatrix
-scikit-learn
-
 # Scipy
 scipy
+
+# Standard Bibliotheken:
+# re
+# os
