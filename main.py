@@ -25,8 +25,7 @@ def initiate_neuralnetwork(input_nodes:int, output_nodes:int, learning_rate:floa
     neural_network = NeuralNetwork.NeuralNetwork(input_nodes, hidden_nodes, output_nodes, learning_rate)
     return neural_network
 
-def train_neuralnetwork(epochs:int = 5, print_output:bool = True):
-    dataset_file = TRAIN_DATASET
+def train_neuralnetwork(dataset_file = TRAIN_DATASET, epochs:int = 5, print_output:bool = True):
     training_data_list = read_dataset(dataset_file)
     if print_output:
         print(f"Training neural network with dataset \"{dataset_file}\" in {epochs} epochs")
@@ -171,17 +170,17 @@ while True:
                 # Benutzerabfrage
                 try:
                     epochs = int(input("How many epochs do you want to train?\n"))
-                    visualize = bool(input("Do you want visualization? [True/False]\n]"))
+                    visualize = input("Do you want visualization? [True|False]\n]")
                 except ValueError as e:
                     print(f"Error in user input. Try again!")
                     break
 
                 # Da beim Visualisieren ein anderer Ansatz gewählt wird hier unterscheiden
-                if visualize:
+                if visualize == "True":
                     accuracy_data = {}
                     # Trainieren mit jeweils einer Epoche für accuracy Daten
                     for epoch in range(epochs):
-                        train_neuralnetwork(1, False)
+                        train_neuralnetwork(epochs=1, print_output=False)
                         accuracy = test_neuralnetwork(read_dataset(TEST_DATASET), False)
                         accuracy_data.update({epoch: accuracy})
                     # Visualisieren
@@ -189,7 +188,7 @@ while True:
                         print(f"Epoch: {key}, Accuracy: {value}")
                 else:
                     # Neuronales Netzwerk trainieren
-                    train_neuralnetwork(epochs)
+                    train_neuralnetwork(epochs=epochs)
             case r'^[T|t]est':
                 # Neuronales Netzwerk testen
                 # Testdatensatz einlesen (Besteht aus einer CSV mit einer Zahl und einem Bild für die Zahl pro Zeile)
