@@ -2,18 +2,22 @@ import matplotlib.pyplot as plt
 import numpy
 import src.neural_network as nn
 import src.re_pattern_matcher as repm
+import src.image_loader as il
 import os
 import pandas as pd
+
 #import scipy.special  # Sigmoid-Funktion
 
 __author__ = "Jonas Ott, Simon Wameling, ..."
 __sources__ = "Inspiration für REPatternMatcher: https://discuss.python.org/t/structural-pattern-matching-should-permit-regex-string-matches/22700/9"
 
-# Globale Variablen für Pfade und Dateien, die häufiger verwendet werden
+# Globale Variablen für Pfade und Dateien und Verzeichnisse, die häufiger verwendet werden
 MODELS_DIR = "models"
 VISUALIZATION_DIR = "data/visualisation/"
+PIC_DIR = "data/pictures/"
 TRAIN_DATASET = "data/raw/mnist_data/testdaten/mnist_train_100.csv"
 TEST_DATASET = "data/raw/mnist_data/testdaten/mnist_test_10.csv"
+
 
 # Lernfortschritt als Diagramm anzeigen
 def create_plot(accuracy_dictionary):
@@ -46,7 +50,7 @@ def create_plot(accuracy_dictionary):
     plt.legend()
     # Als Bild speichern
     try:
-        plt.savefig(VISUALIZATION_DIR + "accuracy_trend.png")
+        plt.savefig(os.path.join(VISUALIZATION_DIR + "accuracy_trend.png"))
     except FileNotFoundError as e_create_plot:
         print(f"Error: {e_create_plot.strerror} for path: {e_create_plot.filename}. \n")
     except IOError as e_create_plot:
@@ -55,19 +59,20 @@ def create_plot(accuracy_dictionary):
     plt.show()
 
 
-def initiate_neuralnetwork(input_nodes:int, output_nodes:int, learning_rate:float = 0.3):
+def initiate_neuralnetwork(input_nodes: int, output_nodes: int, learning_rate: float = 0.3):
     """Berechne die Anzahl der Nodes für das neuronale Netzwerk anhand von Input und Output und
     erstelle ein NN-Objekt.
     """
     input_nodes = input_nodes
     # Anzahl der Hidden Nodes wird anhand des Richtwertes für CNNs dynamisch bestimmt
-    hidden_nodes = int((input_nodes+output_nodes)//(3/2))
+    hidden_nodes = int((input_nodes + output_nodes) // (3 / 2))
     output_nodes = output_nodes
     learning_rate = learning_rate
     neural_network = nn.NeuralNetwork(input_nodes, hidden_nodes, output_nodes, learning_rate)
     return neural_network
 
-def train_neuralnetwork(dataset_file = TRAIN_DATASET, epochs:int = 5, print_output:bool = True):
+
+def train_neuralnetwork(dataset_file=TRAIN_DATASET, epochs: int = 5, print_output: bool = True):
     training_data_list = read_dataset(dataset_file)
     if print_output:
         print(f"Training neural network with dataset \"{dataset_file}\" in {epochs} epochs")
@@ -88,13 +93,51 @@ def train_neuralnetwork(dataset_file = TRAIN_DATASET, epochs:int = 5, print_outp
     if print_output:
         print("Training finished.\n")
 
-def ask_neuralnetwork(pixel_values, display:bool = True, print_output:bool = True):
+
+def list_files(directory: str, endswith = ""):
+    """Liefert alle Dateien mit bestimmter Endung im aktuellen Verzeichnis als Rückgabewert."""
+    try:
+        # Prüfen, ob der Ordner existiert
+        if not os.path.exists(directory):
+            print(f"Directory '{directory}' does not exist.")
+            return False
+
+        # Dateien im Ordner scannen
+        files = [f for f in os.listdir(directory) if
+                 os.path.isfile(os.path.join(directory, f)) and f.endswith(endswith)]
+
+        # Prüfen, ob es Dateien im Ordner gibt
+        if not files:
+            return False
+
+        return files
+    except OSError as e_list_files:
+        print(f"Error: {e_list_files.strerror}.")
+        return False
+
+
+def print_dataset(dataset):
+    # Durch das Dataset iterieren
+    for record in dataset:
+        # Werte auslesen und den ersten Wert verwerfen
+        pixel_values = record.split(',')
+        pixel_values = pixel_values[1:]
+        # Bilder ausgeben
+        print_image(pixel_values)
+
+
+def print_image(pixel_values):
+    # Anzeige der Zahl mit Matplotlib
+    image_array = numpy.asarray(pixel_values, dtype="float").reshape((28, 28))
+    plt.imshow(image_array, cmap="Greys", interpolation="None")
+    plt.show()
+
+
+def ask_neuralnetwork(pixel_values, display: bool = False, print_output: bool = True):
     # Anzeige der Zahl mit Matplotlib
     if display:
-        image_array = numpy.asarray(pixel_values, dtype="float").reshape((28, 28))
-        plt.imshow(image_array, cmap="Greys", interpolation="None")
-        plt.show()
-    # Query and das CNN
+        print_image(pixel_values)
+    # Query an das CNN
     outputs = n.query((numpy.asarray(pixel_values, dtype="float") / 255.0 * 0.99) + 0.01)
     # Ausgabe der Werte
     if print_output:
@@ -106,7 +149,8 @@ def ask_neuralnetwork(pixel_values, display:bool = True, print_output:bool = Tru
     # Das Label zurückgeben (Was das CNN denkt, der Wert ist)
     return numpy.argmax(outputs)
 
-def test_neuralnetwork(test_dataset, print_output:bool = True):
+
+def test_neuralnetwork(test_dataset, print_output: bool = True, plot: bool = False):
     if print_output:
         print(f"Testing neural network...")
     # Eine Scorecard zur Bestimmung der Leistung
@@ -117,7 +161,7 @@ def test_neuralnetwork(test_dataset, print_output:bool = True):
         all_values = record.split(',')
         # Der erste Wert ist die Zahl die wir suchen
         correct_label = int(all_values[0])
-        label = ask_neuralnetwork(all_values[1:], display=False, print_output=False)
+        label = ask_neuralnetwork(all_values[1:], display=plot, print_output=False)
         # append correct or incorrect to list
         if label == correct_label:
             # network's answer matches correct answer, add 1 to scorecard
@@ -135,7 +179,8 @@ def test_neuralnetwork(test_dataset, print_output:bool = True):
         print(f"Performance = {performance:.2%}\n")
     return performance
 
-def read_dataset(file_path:str):
+
+def read_dataset(file_path: str):
     """Auslesen des Datensatzes mit Fehlerbehandlung. Erwartet wird eine CSV-Datei,
     die die Zahl und die Werte beinhaltet.
     """
@@ -143,45 +188,25 @@ def read_dataset(file_path:str):
         data_file = open(file_path, "r")
         data_list = data_file.readlines()
         data_file.close()
+        return data_list
     except FileNotFoundError as e_read_dataset:
-        print(f"Error: {e_read_dataset.strerror} for path: {e_read_dataset.filename}. \nMake sure the file exists and is accessible.")
-        exit(1)
+        print(
+            f"Error: {e_read_dataset.strerror} for path: {e_read_dataset.filename}. \nMake sure the file exists and is accessible.")
     except IOError as e_read_dataset:
         print(f"Unexpected Error: {e_read_dataset.strerror} for path: {e_read_dataset.filename}.")
-        exit(1)
-    return data_list
-
-def list_models():
-    """Liefert alle .npz Dateien im aktuellen Verzeichnis als Rückgabewert."""
-    try:
-        # Prüfen, ob der Ordner existiert
-        if not os.path.exists(MODELS_DIR):
-            print(f"Directory '{MODELS_DIR}' does not exist.")
-            return False
-
-        # Dateien im Ordner scannen
-        files = [f for f in os.listdir(MODELS_DIR) if
-                 os.path.isfile(os.path.join(MODELS_DIR, f)) and f.endswith('.npz')]
-
-        # Wenn es keine Models gibt, können wir nichts laden
-        if not files:
-            return False
-
-        return files
-    except OSError as e_list_models:
-        print(f"Error: {e_list_models.strerror}.")
-        return False
 
 
 def print_help():
     """Zeigt die Hilfe an"""
     help_data = {
-        "Command": ["Train", "Test", "Save", "Load", "End", "Help"],
+        "Command": ["Train", "Test", "Ask", "Save", "Load", "Reset", "End", "Help"],
         "Description": [
             "Trains the network",
             "Tests the network with test data",
+            "Asks the neural network to analyze an image",
             "Saves the neural networks' weights in 'models/'",
             "Loads the weights in 'models/'",
+            "Resets the network's weights",
             "Exits the program",
             "Shows the help"
         ]
@@ -189,12 +214,13 @@ def print_help():
 
     # Ein Pandas DataFrame zur Darstellung der Tabelle
     df = pd.DataFrame(help_data)
-    print("--- Available Commands ---" + "-"* (61-26))
+    print("--- Available Commands ---" + "-" * (61 - 26))
     # index=False entfernt die Zeilennummern (0, 1, 2...)
     print(df.to_string(index=False, justify='left',
                        formatters={'Command': lambda x: f"{x:<10}", 'Description': lambda x: f"{x:<50}"}))
     # Trennlinie genau passend zur Tabellenbreite (10 + 1 + 50 = 61)
     print("-" * 61 + "\n")
+
 
 # 1. INIT
 # Erzeuge neuronales Netzwerkobjekt n mit der Anzahl der Pixel als Anzahl der Nodes im Input Layer.
@@ -206,7 +232,7 @@ n = initiate_neuralnetwork(n_pixel, n_output)
 # 2. MAIN LOOP
 while True:
     try:
-        user_input = input(f"What do you want to do? [Train|Test|Save|Load|End|Help]\n")
+        user_input = input(f"What do you want to do? [Train|Test|Ask|Save|Load|Reset|End|Help]\n")
         match repm.REqual(user_input):
             case r'^[T|t]rain':
                 # Benutzerabfrage
@@ -228,9 +254,9 @@ while True:
                     for epoch in range(n_epochs):
                         train_neuralnetwork(epochs=1, print_output=False)
                         accuracy = test_neuralnetwork(test_list, False)
-                        accuracy_data[epoch+1] = accuracy
+                        accuracy_data[epoch + 1] = accuracy
 
-                        print(f"Epoch {epoch+1}: Accuracy = {accuracy:.2%}")
+                        print(f"Epoch {epoch + 1}: Accuracy = {accuracy:.2%}")
 
                     # Visualisieren
                     create_plot(accuracy_data)
@@ -243,11 +269,30 @@ while True:
                 # Testdatensatz einlesen (Besteht aus einer CSV mit einer Zahl und einem Bild für die Zahl pro Zeile)
                 test_list = read_dataset(TEST_DATASET)
                 test_neuralnetwork(test_list)
-            case r'^[E|e]nd|^[E|e]xit':
-                print(f"Exiting...")
-                exit(0)
+            case r'^[A|a]sk':
+                img_files = list_files(PIC_DIR, ".png")
+                if img_files:
+                    print(f"Found {len(img_files)} image(s):")
+                    for img in img_files:
+                        print(f"  -> {img}")
+                filename = input("Please type in the file name to load: ").strip()
+                if not filename:
+                    print("That is not a valid filename. Try again!")
+                    break
+                if not filename.endswith(".png"):
+                    filename = filename + ".png"
+                img = il.ImageLoader(os.path.join(PIC_DIR, filename))
+                img_values = img.get_pixel_values()
+                guess = ask_neuralnetwork(img_values, True, True)
+                print(f"The neural network thinks this is a: {guess}\n.")
+            case r'datasets':
+                # For Debugging
+                print("Test:")
+                print_dataset(read_dataset(TEST_DATASET))
+                print("Train:")
+                print_dataset(read_dataset(TRAIN_DATASET))
             case r'^[S|s]ave':
-                models = list_models()
+                models = list_files(MODELS_DIR, ".npz")
                 if models:
                     print(f"Found {len(models)} model(s):")
                     for model in models:
@@ -257,8 +302,8 @@ while True:
                     filename = "weights.npz"
                 n.save_weights(filename)
             case r'^[L|l]oad':
-                # Erst auflisten. Wenn nichts da ist, brauchen wir auch nichts abzufragen.
-                models = list_models()
+                # Modelle auflisten und prüfen, ob welche im Ordner sind
+                models = list_files(MODELS_DIR, ".npz")
                 if models:
                     print(f"Found {len(models)} model(s):")
                     for model in models:
@@ -273,6 +318,34 @@ while True:
                     n.load_weights(filename)
                 else:
                     print(f"No models found.")
+            case r'^[D|d]elete':
+                # Find models in directory
+                models = list_files(MODELS_DIR, ".npz")
+                if models:
+                    print(f"Found {len(models)} model(s):")
+                    for model in models:
+                        print(f"  -> {model}")
+                    filename = input("Which model do you want to delete? [file name]: ").strip()
+                    # Automatisch .npz anhängen, falls der Benutzer es vergessen hat
+                    if not filename.endswith(".npz"):
+                        filename += ".npz"
+
+                    try:
+                        # This will delete saved model weights
+                        os.remove(os.path.join(MODELS_DIR, filename))
+                        print(f"Deleted {filename} from {MODELS_DIR}")
+                    except FileNotFoundError as e:
+                        print(f"File not found: {e.filename}")
+                else:
+                    print(f"No models found.")
+            case r'^[R|r]eset':
+                # This will reset the neural network by creating a new neural_network object
+                print(f"Resetting CNN with ID: {n.__hash__()}.")
+                n = initiate_neuralnetwork(n_pixel, n_output)
+                print(f"New CNN ID: {n.__hash__()}.\n")
+            case r'^[E|e]nd|^[E|e]xit':
+                print(f"Exiting...")
+                exit(0)
             case r'^[H|h]elp':
                 print_help()
             case _:
