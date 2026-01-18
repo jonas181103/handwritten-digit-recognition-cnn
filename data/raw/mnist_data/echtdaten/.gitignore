@@ -2,5 +2,4 @@
 *
 # To not ignore this file itself
 !.gitignore
-!untrained.npz
-!trained.npz
+!echtdaten.zip
