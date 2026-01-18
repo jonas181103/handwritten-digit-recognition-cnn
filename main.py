@@ -28,7 +28,7 @@ def create_plot(accuracy_dictionary):
     # Layout des Diagramms
     plt.figure(figsize=(10, 6))
 
-    # 3. Die Kurve zeichnen mit 'epoch' auf der X-Achse, 'performance' auf der Y-Achse
+    # 3. Die Kurve zeichnen mit 'epoch' auf der x-Achse, 'performance' auf der y-Achse
     plt.plot(epochs_sorted, performances,
              marker='o',  # Punkte an den Datenwerten
              linestyle='-',  # Durchgezogene Linie
@@ -47,10 +47,10 @@ def create_plot(accuracy_dictionary):
     # Als Bild speichern
     try:
         plt.savefig(VISUALIZATION_DIR + "accuracy_trend.png")
-    except FileNotFoundError as e:
-        print(f"Error: {e.strerror} for path: {e.filename}. \n")
-    except IOError as e:
-        print(f"Unexpected Error: {e.strerror} for path: {e.filename}.")
+    except FileNotFoundError as e_create_plot:
+        print(f"Error: {e_create_plot.strerror} for path: {e_create_plot.filename}. \n")
+    except IOError as e_create_plot:
+        print(f"Unexpected Error: {e_create_plot.strerror} for path: {e_create_plot.filename}.")
         exit(1)
     plt.show()
 
@@ -71,7 +71,7 @@ def train_neuralnetwork(dataset_file = TRAIN_DATASET, epochs:int = 5, print_outp
     training_data_list = read_dataset(dataset_file)
     if print_output:
         print(f"Training neural network with dataset \"{dataset_file}\" in {epochs} epochs")
-    for e in range(epochs):
+    for i in range(epochs):
         # Alle Zeilen im Dataset sind ein record und repräsentieren eine Zahl
         for record in training_data_list:
             pixel_values = record.split(',')
@@ -83,7 +83,7 @@ def train_neuralnetwork(dataset_file = TRAIN_DATASET, epochs:int = 5, print_outp
             n.train(inputs, targets)
             pass
         if print_output:
-            print(f"Epoch {e + 1} done")
+            print(f"Epoch {i + 1} done")
         pass
     if print_output:
         print("Training finished.\n")
@@ -143,11 +143,11 @@ def read_dataset(file_path:str):
         data_file = open(file_path, "r")
         data_list = data_file.readlines()
         data_file.close()
-    except FileNotFoundError as e:
-        print(f"Error: {e.strerror} for path: {e.filename}. \nMake sure the file exists and is accessible.")
+    except FileNotFoundError as e_read_dataset:
+        print(f"Error: {e_read_dataset.strerror} for path: {e_read_dataset.filename}. \nMake sure the file exists and is accessible.")
         exit(1)
-    except IOError as e:
-        print(f"Unexpected Error: {e.strerror} for path: {e.filename}.")
+    except IOError as e_read_dataset:
+        print(f"Unexpected Error: {e_read_dataset.strerror} for path: {e_read_dataset.filename}.")
         exit(1)
     return data_list
 
@@ -168,8 +168,8 @@ def list_models():
             return False
 
         return files
-    except OSError as e:
-        print(f"Error: {e.strerror}.")
+    except OSError as e_list_models:
+        print(f"Error: {e_list_models.strerror}.")
         return False
 
 
@@ -211,31 +211,33 @@ while True:
             case r'^[T|t]rain':
                 # Benutzerabfrage
                 try:
-                    epochs = int(input("How many epochs do you want to train?\n"))
-                    visualize = input("Do you want visualization? [True|False]\n]")
+                    n_epochs = int(input("How many epochs do you want to train?\n"))
+                    visualize = input("Do you want visualization? [True|False]\n")
                 except ValueError as e:
                     print(f"Error in user input. Try again!")
                     break
 
-                # Da beim Visualisieren ein anderer Ansatz gewählt wird hier unterscheiden
+                # Da beim Visualisieren ein anderer Ansatz gewählt wird, hier unterscheiden
                 if visualize == "True":
                     accuracy_data = {}
+                    test_list = read_dataset(TEST_DATASET)
+                    accuracy = test_neuralnetwork(test_list, False)
+                    accuracy_data[0] = accuracy
+                    print(f"Epoch {0}: Accuracy = {accuracy:.2%}")
                     # Trainieren mit jeweils einer Epoche für accuracy Daten
-                    for epoch in range(epochs):
+                    for epoch in range(n_epochs):
                         train_neuralnetwork(epochs=1, print_output=False)
-                        accuracy = test_neuralnetwork(read_dataset(TEST_DATASET), False)
-                        accuracy_data[epoch] = accuracy
+                        accuracy = test_neuralnetwork(test_list, False)
+                        accuracy_data[epoch+1] = accuracy
 
-                        print(f"Epoch {epoch}: Accuracy = {accuracy:.5f}")
-
-                    create_plot(accuracy_data)
+                        print(f"Epoch {epoch+1}: Accuracy = {accuracy:.2%}")
 
                     # Visualisieren
-                    for epoch, accuracy in accuracy_data.items():
-                        print(f"Epoch: {epoch}, Accuracy: {accuracy}")
+                    create_plot(accuracy_data)
+
                 else:
                     # Neuronales Netzwerk trainieren
-                    train_neuralnetwork(epochs=epochs)
+                    train_neuralnetwork(epochs=n_epochs)
             case r'^[T|t]est':
                 # Neuronales Netzwerk testen
                 # Testdatensatz einlesen (Besteht aus einer CSV mit einer Zahl und einem Bild für die Zahl pro Zeile)
