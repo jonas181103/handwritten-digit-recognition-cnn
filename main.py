@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy
-import src.NeuralNetwork as NeuralNetwork
-import src.REPatternMatcher as repm
+import src.neural_network as nn
+import src.re_pattern_matcher as repm
 import os
 import pandas as pd
 #import scipy.special  # Sigmoid-Funktion
@@ -23,7 +23,7 @@ def initiate_neuralnetwork(input_nodes:int, output_nodes:int, learning_rate:floa
     hidden_nodes = int((input_nodes+output_nodes)//(3/2))
     output_nodes = output_nodes
     learning_rate = learning_rate
-    neural_network = NeuralNetwork.NeuralNetwork(input_nodes, hidden_nodes, output_nodes, learning_rate)
+    neural_network = nn.NeuralNetwork(input_nodes, hidden_nodes, output_nodes, learning_rate)
     return neural_network
 
 def train_neuralnetwork(dataset_file = TRAIN_DATASET, epochs:int = 5, print_output:bool = True):
@@ -185,8 +185,8 @@ while True:
                         accuracy = test_neuralnetwork(read_dataset(TEST_DATASET), False)
                         accuracy_data.update({epoch: accuracy})
                     # Visualisieren
-                    for key, value in accuracy_data.items():
-                        print(f"Epoch: {key}, Accuracy: {value}")
+                    for epoch, accuracy in accuracy_data.items():
+                        print(f"Epoch: {epoch}, Accuracy: {accuracy}")
                 else:
                     # Neuronales Netzwerk trainieren
                     train_neuralnetwork(epochs=epochs)
