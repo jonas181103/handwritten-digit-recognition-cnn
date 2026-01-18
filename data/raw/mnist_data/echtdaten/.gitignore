@@ -2,4 +2,3 @@
 *
 # To not ignore this file itself
 !.gitignore
-!echtdaten.zip
