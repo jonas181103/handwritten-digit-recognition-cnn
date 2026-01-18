@@ -11,7 +11,7 @@ __sources__ = "Inspiration für REPatternMatcher: https://discuss.python.org/t/s
 
 # Globale Variablen für Pfade und Dateien, die häufiger verwendet werden
 MODELS_DIR = "models"
-VISUALIZATION_DIR = "data/visualisation"
+VISUALIZATION_DIR = "data/visualisation/"
 TRAIN_DATASET = "data/raw/mnist_data/testdaten/mnist_train_100.csv"
 TEST_DATASET = "data/raw/mnist_data/testdaten/mnist_test_10.csv"
 
