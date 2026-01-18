@@ -1,10 +1,11 @@
 import matplotlib.pyplot as plt
 import numpy
+import numpy as np
+import os
+import pandas as pd
 import src.neural_network as nn
 import src.re_pattern_matcher as repm
 import src.image_loader as il
-import os
-import pandas as pd
 
 #import scipy.special  # Sigmoid-Funktion
 
@@ -15,12 +16,13 @@ __sources__ = "Inspiration für REPatternMatcher: https://discuss.python.org/t/s
 MODELS_DIR = "models"
 VISUALIZATION_DIR = "data/visualisation/"
 PIC_DIR = "data/pictures/"
-TRAIN_DATASET = "data/raw/mnist_data/testdaten/mnist_train_100.csv"
-TEST_DATASET = "data/raw/mnist_data/testdaten/mnist_test_10.csv"
+TRAIN_DATASET = "data/raw/mnist_data/echtdaten/mnist_test.csv"
+TEST_DATASET = "data/raw/mnist_data/testdaten/mnist_train_100.csv"
 
 
-# Lernfortschritt als Diagramm anzeigen
 def create_plot(accuracy_dictionary):
+    """ Lernfortschritt als Diagramm anzeigen """
+
     if not accuracy_dictionary:
         print("Keine Daten zum Visualisieren vorhanden.")
         return
@@ -32,7 +34,7 @@ def create_plot(accuracy_dictionary):
     # Layout des Diagramms
     plt.figure(figsize=(10, 6))
 
-    # 3. Die Kurve zeichnen mit 'epoch' auf der x-Achse, 'performance' auf der y-Achse
+    # Die Kurve zeichnen mit 'epoch' auf der x-Achse, 'performance' auf der y-Achse
     plt.plot(epochs_sorted, performances,
              marker='o',  # Punkte an den Datenwerten
              linestyle='-',  # Durchgezogene Linie
@@ -60,8 +62,8 @@ def create_plot(accuracy_dictionary):
 
 
 def initiate_neuralnetwork(input_nodes: int, output_nodes: int, learning_rate: float = 0.3):
-    """Berechne die Anzahl der Nodes für das neuronale Netzwerk anhand von Input und Output und
-    erstelle ein NN-Objekt.
+    """Berechnet die Anzahl der Nodes für das neuronale Netzwerk anhand von Input und Output und
+    erstellt ein NN-Objekt.
     """
     input_nodes = input_nodes
     # Anzahl der Hidden Nodes wird anhand des Richtwertes für CNNs dynamisch bestimmt
@@ -133,24 +135,34 @@ def print_image(pixel_values):
     plt.show()
 
 
-def ask_neuralnetwork(pixel_values, display: bool = False, print_output: bool = True):
+def ask_neuralnetwork(pixel_values: list, min_confidence: float = 0, display: bool = False, print_output: bool = True):
+    cnn_guess = {"number": -1, "confidence":0}
     # Anzeige der Zahl mit Matplotlib
     if display:
         print_image(pixel_values)
     # Query an das CNN
     outputs = n.query((numpy.asarray(pixel_values, dtype="float") / 255.0 * 0.99) + 0.01)
     # Ausgabe der Werte
-    if print_output:
-        counter = 0
-        for value in outputs:
-            print(f"Number: {counter} with certainty {value[0]:.2%}")
-            counter += 1
+    counter = 0
+    highest_value = np.float64(0)
+    for value in outputs:
+        certainty = value[0]
+        if print_output:
+            print(f"Number: {counter} with certainty {certainty:.2%}")
+        if certainty > highest_value:
+            cnn_guess = {"number": counter, "confidence": certainty}
+            highest_value = certainty
+        counter += 1
+    if cnn_guess["confidence"] < min_confidence:
+        cnn_guess = {"number": -1}
 
     # Das Label zurückgeben (Was das CNN denkt, der Wert ist)
-    return numpy.argmax(outputs)
+    return cnn_guess["number"]
 
 
 def test_neuralnetwork(test_dataset, print_output: bool = True, plot: bool = False):
+    if not test_dataset:
+        return 0
     if print_output:
         print(f"Testing neural network...")
     # Eine Scorecard zur Bestimmung der Leistung
@@ -283,8 +295,11 @@ while True:
                     filename = filename + ".png"
                 img = il.ImageLoader(os.path.join(PIC_DIR, filename))
                 img_values = img.get_pixel_values()
-                guess = ask_neuralnetwork(img_values, True, True)
-                print(f"The neural network thinks this is a: {guess}\n.")
+                guess = ask_neuralnetwork(img_values, 0.4,True, True)
+                if not guess == -1:
+                    print(f"The neural network thinks this is a: {guess}.\n")
+                else:
+                    print("The neural network wasn't confident enough to make a guess.")
             case r'datasets':
                 # For Debugging
                 print("Test:")
@@ -331,7 +346,7 @@ while True:
                         filename += ".npz"
 
                     try:
-                        # This will delete saved model weights
+                        # Dies löscht die Datei
                         os.remove(os.path.join(MODELS_DIR, filename))
                         print(f"Deleted {filename} from {MODELS_DIR}")
                     except FileNotFoundError as e:

@@ -17,4 +17,4 @@ class ImageLoader:
             grayscale_img = ImageOps.invert(grayscale_img)
 
         # Das Bild als Liste der Werte zurückgeben
-        return list(grayscale_img.getdata())
+        return grayscale_img.getdata()
