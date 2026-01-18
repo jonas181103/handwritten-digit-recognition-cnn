@@ -13,7 +13,7 @@ MODELS_DIR = "models"
 TRAIN_DATASET = "data/raw/mnist_data/Testdaten/mnist_train_100.csv"
 TEST_DATASET = "data/raw/mnist_data/Testdaten/mnist_test_10.csv"
 
-def initiate_neuralnetwork(input_nodes:int, output_nodes:int, learningrate:float = 0.3):
+def initiate_neuralnetwork(input_nodes:int, output_nodes:int, learning_rate:float = 0.3):
     """Berechne die Anzahl der Nodes für das neuronale Netzwerk anhand von Input und Output und
     erstelle ein NN-Objekt.
     """
@@ -21,14 +21,15 @@ def initiate_neuralnetwork(input_nodes:int, output_nodes:int, learningrate:float
     # Anzahl der Hidden Nodes wird anhand des Richtwertes für CNNs dynamisch bestimmt
     hidden_nodes = int((input_nodes+output_nodes)//(3/2))
     output_nodes = output_nodes
-    learning_rate = learningrate
+    learning_rate = learning_rate
     neural_network = NeuralNetwork.NeuralNetwork(input_nodes, hidden_nodes, output_nodes, learning_rate)
     return neural_network
 
-def train_neuralnetwork(epochs:int = 5):
+def train_neuralnetwork(epochs:int = 5, print_output:bool = True):
     dataset_file = TRAIN_DATASET
     training_data_list = read_dataset(dataset_file)
-    print(f"Training neural network with dataset \"{dataset_file}\" in {epochs} epochs")
+    if print_output:
+        print(f"Training neural network with dataset \"{dataset_file}\" in {epochs} epochs")
     for e in range(epochs):
         # Alle Zeilen im Dataset sind ein record und repräsentieren eine Zahl
         for record in training_data_list:
@@ -40,9 +41,11 @@ def train_neuralnetwork(epochs:int = 5):
             targets[int(pixel_values[0])] = 0.99
             n.train(inputs, targets)
             pass
-        print(f"Epoch {e + 1} done")
+        if print_output:
+            print(f"Epoch {e + 1} done")
         pass
-    print("Training finished.\n")
+    if print_output:
+        print("Training finished.\n")
 
 def ask_neuralnetwork(pixel_values, display:bool = True, print_output:bool = True):
     # Anzeige der Zahl mit Matplotlib
@@ -62,8 +65,9 @@ def ask_neuralnetwork(pixel_values, display:bool = True, print_output:bool = Tru
     # Das Label zurückgeben (Was das CNN denkt, der Wert ist)
     return numpy.argmax(outputs)
 
-def test_neuralnetwork(test_dataset):
-    print(f"Testing neural network...")
+def test_neuralnetwork(test_dataset, print_output:bool = True):
+    if print_output:
+        print(f"Testing neural network...")
     # Eine Scorecard zur Bestimmung der Leistung
     scorecard = []
 
@@ -86,7 +90,8 @@ def test_neuralnetwork(test_dataset):
     # calculate the performance score, the fraction of correct answers
     scorecard_array = numpy.asarray(scorecard)
     performance = numpy.mean(scorecard_array)
-    print(f"Performance = {performance:.2%}\n")
+    if print_output:
+        print(f"Performance = {performance:.2%}\n")
     return performance
 
 def read_dataset(file_path:str):
@@ -163,8 +168,28 @@ while True:
         user_input = input(f"What do you want to do? [Train|Test|Save|Load|End|Help]\n")
         match repm.REqual(user_input):
             case r'^[T|t]rain':
-                # Neuronales Netzwerk trainieren
-                train_neuralnetwork()
+                # Benutzerabfrage
+                try:
+                    epochs = int(input("How many epochs do you want to train?\n"))
+                    visualize = bool(input("Do you want visualization? [True/False]\n]"))
+                except ValueError as e:
+                    print(f"Error in user input. Try again!")
+                    break
+
+                # Da beim Visualisieren ein anderer Ansatz gewählt wird hier unterscheiden
+                if visualize:
+                    accuracy_data = {}
+                    # Trainieren mit jeweils einer Epoche für accuracy Daten
+                    for epoch in range(epochs):
+                        train_neuralnetwork(1, False)
+                        accuracy = test_neuralnetwork(read_dataset(TEST_DATASET), False)
+                        accuracy_data.update({epoch: accuracy})
+                    # Visualisieren
+                    for key, value in accuracy_data.items():
+                        print(f"Epoch: {key}, Accuracy: {value}")
+                else:
+                    # Neuronales Netzwerk trainieren
+                    train_neuralnetwork(epochs)
             case r'^[T|t]est':
                 # Neuronales Netzwerk testen
                 # Testdatensatz einlesen (Besteht aus einer CSV mit einer Zahl und einem Bild für die Zahl pro Zeile)
