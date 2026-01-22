@@ -97,6 +97,7 @@ def train_neuralnetwork(p_neuralnetwork, dataset_file=TRAIN_DATASET,
     """
     Funktion zum Vorbereiten vom Trainieren des neuronalen Netzwerks mittels train() im NN-Objekt.
 
+    :param p_neuralnetwork: NN-Objekt, dass trainiert werden soll
     :param dataset_file: Datei, die das Dataset enthält (csv)
     :param epochs: für wie viele Epochen trainiert wird
     :param print_output: soll Rückmeldung per print gegeben werden?
@@ -112,7 +113,7 @@ def train_neuralnetwork(p_neuralnetwork, dataset_file=TRAIN_DATASET,
             # Konvertiere Pixeldaten 0-255 zu float 0-1
             inputs = (np.asarray(pixel_values[1:], float) / 255.0 * 0.99) + 0.01
             # Ziel festlegen: alle Werte des Outputs auf 0.01 außer der gewünschte Wert
-            targets = np.zeros(n.onodes) + 0.01
+            targets = np.zeros(my_nn.onodes) + 0.01
             targets[int(pixel_values[0])] = 0.99
             # Neurales Netzwerk trainieren
             p_neuralnetwork.train(inputs, targets)
@@ -183,6 +184,7 @@ def ask_neuralnetwork(p_neuralnetwork, pixel_values: list, min_confidence: float
     """
     Befragt das neuronale Netzwerk, um die eingegebenen Pixelwerte zu klassifizieren.
 
+    :param p_neuralnetwork: NN-Objekt, dass befragt werden soll
     :param pixel_values: Liste von 784 Pixelwerten (0-255), die das Eingabebild repräsentieren
     :param min_confidence: minimaler Wert (0.0 bis 1.0), um das ermittelte Ergebnis zu akzeptieren
     :param display: ob eine Visualisierung des Lernfortschritts erstellt werden soll
@@ -308,7 +310,7 @@ def print_help():
 # Erzeuge neuronales Netzwerkobjekt n mit der Anzahl der Pixel als Anzahl der Nodes im Input Layer.
 # Wir setzen voraus, dass alle Bilder die gleiche Größe haben
 # und eine Zahl von 0 bis 9 gefunden werden soll
-n = initiate_neuralnetwork(N_PIXEL, N_OUTPUT)
+my_nn = initiate_neuralnetwork(N_PIXEL, N_OUTPUT)
 
 # 2. MAIN LOOP
 while True:
@@ -329,13 +331,13 @@ while True:
                 if visualize == "True":
                     accuracy_data = {}
                     test_list = read_dataset(TEST_DATASET)
-                    accuracy = test_neuralnetwork(n, test_list, False)
+                    accuracy = test_neuralnetwork(my_nn, test_list, False)
                     accuracy_data[0] = accuracy
                     print(f"Epoch {0}: Accuracy = {accuracy:.2%}")
                     # Trainieren mit jeweils einer Epoche für accuracy Daten
                     for epoch in range(n_epochs):
-                        train_neuralnetwork(p_neuralnetwork=n, epochs=1, print_output=False)
-                        accuracy = test_neuralnetwork(n, test_list, False)
+                        train_neuralnetwork(p_neuralnetwork=my_nn, epochs=1, print_output=False)
+                        accuracy = test_neuralnetwork(my_nn, test_list, False)
                         accuracy_data[epoch + 1] = accuracy
 
                         print(f"Epoch {epoch + 1}: Accuracy = {accuracy:.2%}")
@@ -345,14 +347,14 @@ while True:
 
                 else:
                     # Neuronales Netzwerk trainieren
-                    train_neuralnetwork(p_neuralnetwork=n, epochs=n_epochs)
+                    train_neuralnetwork(p_neuralnetwork=my_nn, epochs=n_epochs)
             case r'^[T|t]est':
                 # Neuronales Netzwerk testen
 
                 # Testdatensatz einlesen
                 # (Besteht aus einer CSV mit einer Zahl und einem Bild für die Zahl pro Zeile)
                 test_list = read_dataset(TEST_DATASET)
-                test_neuralnetwork(n, test_list)
+                test_neuralnetwork(my_nn, test_list)
             case r'^[A|a]sk':
                 img_files = list_files(PIC_DIR, ".png")
                 if img_files:
@@ -367,7 +369,7 @@ while True:
                     filename = filename + ".png"
                 img = il.ImageLoader(os.path.join(PIC_DIR, filename))
                 img_values = img.get_pixel_values()
-                guess = ask_neuralnetwork(n, img_values, 0.4,True, True)
+                guess = ask_neuralnetwork(my_nn, img_values, 0.4, True, True)
                 if not guess == -1:
                     print(f"The neural network thinks this is a: {guess}.\n")
                 else:
@@ -388,7 +390,7 @@ while True:
                                  "(existing files will be overwritten!): ").strip()
                 if not filename:
                     filename = "weights.npz"
-                n.save_weights(filename)
+                my_nn.save_weights(filename)
             case r'^[L|l]oad':
                 # Modelle auflisten und prüfen, ob welche im Ordner sind
                 models = list_files(MODELS_DIR, ".npz")
@@ -403,7 +405,7 @@ while True:
                     # Automatisch .npz anhängen, falls der User es vergessen hat
                     if not filename.endswith(".npz"):
                         filename += ".npz"
-                    n.load_weights(filename)
+                    my_nn.load_weights(filename)
                 else:
                     print("No models found.")
             case r'^[D|d]elete':
@@ -428,9 +430,9 @@ while True:
                     print("No models found.")
             case r'^[R|r]eset':
                 # This will reset the neural network by creating a new neural_network object
-                print(f"Resetting CNN with ID: {hash(n)}.")
-                n = initiate_neuralnetwork(N_PIXEL, N_OUTPUT)
-                print(f"New CNN ID: {hash(n)}.\n")
+                print(f"Resetting CNN with ID: {hash(my_nn)}.")
+                my_nn = initiate_neuralnetwork(N_PIXEL, N_OUTPUT)
+                print(f"New CNN ID: {hash(my_nn)}.\n")
             case r'^[E|e]nd|^[E|e]xit':
                 print("Exiting...")
                 sys.exit(0)
