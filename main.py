@@ -1,16 +1,24 @@
-import matplotlib.pyplot as plt
-import numpy
-import numpy as np
+""" Dieses Projekt dient der automatisierten Erkennung
+und Klassifikation handschriftlicher Ziffern (0-9).
+Es demonstriert die Anwendung von Deep Learning
+und speziell eines Convolutional Neural Network (CNN).
+Inspiration für REPatternMatcher:
+https://discuss.python.org/t/structural-pattern-matching-should-permit-regex-string-matches/22700/9
+"""
+
+# Standard-Bibliotheken importieren
 import os
+import sys
+# Third-Party-Bibliotheken importieren
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+# Eigene Module importieren
 import src.neural_network as nn
 import src.re_pattern_matcher as repm
 import src.image_loader as il
 
-#import scipy.special  # Sigmoid-Funktion
-
 __author__ = "Jonas Ott, Simon Wameling, ..."
-__sources__ = "Inspiration für REPatternMatcher: https://discuss.python.org/t/structural-pattern-matching-should-permit-regex-string-matches/22700/9"
 
 # Globale Variablen für Pfade und Dateien und Verzeichnisse, die häufiger verwendet werden
 MODELS_DIR = "models"
@@ -18,11 +26,17 @@ VISUALIZATION_DIR = "data/visualisation/"
 PIC_DIR = "data/pictures/"
 TRAIN_DATASET = "data/raw/mnist_data/echtdaten/mnist_test.csv"
 TEST_DATASET = "data/raw/mnist_data/testdaten/mnist_train_100.csv"
+N_PIXEL = 784
+N_OUTPUT = 10
 
 
 def create_plot(accuracy_dictionary):
-    """ Lernfortschritt als Diagramm anzeigen """
+    """
+    Lernfortschritt als Diagramm anzeigen.
 
+    :param accuracy_dictionary: Dict, in dem die Accuracy mit Epoche als Key gespeichert ist
+    :return: None
+    """
     if not accuracy_dictionary:
         print("Keine Daten zum Visualisieren vorhanden.")
         return
@@ -57,24 +71,37 @@ def create_plot(accuracy_dictionary):
         print(f"Error: {e_create_plot.strerror} for path: {e_create_plot.filename}. \n")
     except IOError as e_create_plot:
         print(f"Unexpected Error: {e_create_plot.strerror} for path: {e_create_plot.filename}.")
-        exit(1)
     plt.show()
 
 
-def initiate_neuralnetwork(input_nodes: int, output_nodes: int, learning_rate: float = 0.3):
-    """Berechnet die Anzahl der Nodes für das neuronale Netzwerk anhand von Input und Output und
-    erstellt ein NN-Objekt.
+def initiate_neuralnetwork(p_input_nodes: int, p_output_nodes: int, p_learning_rate: float = 0.3):
+    """ Berechnet die Anzahl derv Hidden Nodes für das neuronale Netzwerk
+     anhand von Input und Output und erstellt ein NN-Objekt.
+
+    :param p_input_nodes: Anzahl der Input-Nodes des neuronalen Netzwerks
+    :param p_output_nodes: Anzahl der Output-Nodes des neuronalen Netzwerks
+    :param p_learning_rate: stellt die Lernrate des NN-Objektes ein
+    :return: das neu erstellte NN-Objekt
     """
-    input_nodes = input_nodes
+    input_nodes = p_input_nodes
     # Anzahl der Hidden Nodes wird anhand des Richtwertes für CNNs dynamisch bestimmt
-    hidden_nodes = int((input_nodes + output_nodes) // (3 / 2))
-    output_nodes = output_nodes
-    learning_rate = learning_rate
+    hidden_nodes = int((input_nodes + p_output_nodes) // (3 / 2))
+    output_nodes = p_output_nodes
+    learning_rate = p_learning_rate
     neural_network = nn.NeuralNetwork(input_nodes, hidden_nodes, output_nodes, learning_rate)
     return neural_network
 
 
-def train_neuralnetwork(dataset_file=TRAIN_DATASET, epochs: int = 5, print_output: bool = True):
+def train_neuralnetwork(p_neuralnetwork, dataset_file=TRAIN_DATASET,
+                        epochs: int = 5, print_output: bool = True):
+    """
+    Funktion zum Vorbereiten vom Trainieren des neuronalen Netzwerks mittels train() im NN-Objekt.
+
+    :param dataset_file: Datei, die das Dataset enthält (csv)
+    :param epochs: für wie viele Epochen trainiert wird
+    :param print_output: soll Rückmeldung per print gegeben werden?
+    :return:
+    """
     training_data_list = read_dataset(dataset_file)
     if print_output:
         print(f"Training neural network with dataset \"{dataset_file}\" in {epochs} epochs")
@@ -83,21 +110,26 @@ def train_neuralnetwork(dataset_file=TRAIN_DATASET, epochs: int = 5, print_outpu
         for record in training_data_list:
             pixel_values = record.split(',')
             # Konvertiere Pixeldaten 0-255 zu float 0-1
-            inputs = (numpy.asarray(pixel_values[1:], float) / 255.0 * 0.99) + 0.01
+            inputs = (np.asarray(pixel_values[1:], float) / 255.0 * 0.99) + 0.01
             # Ziel festlegen: alle Werte des Outputs auf 0.01 außer der gewünschte Wert
-            targets = numpy.zeros(n.onodes) + 0.01
+            targets = np.zeros(n.onodes) + 0.01
             targets[int(pixel_values[0])] = 0.99
-            n.train(inputs, targets)
-            pass
+            # Neurales Netzwerk trainieren
+            p_neuralnetwork.train(inputs, targets)
         if print_output:
             print(f"Epoch {i + 1} done")
-        pass
     if print_output:
         print("Training finished.\n")
 
 
 def list_files(directory: str, endswith = ""):
-    """Liefert alle Dateien mit bestimmter Endung im aktuellen Verzeichnis als Rückgabewert."""
+    """
+    Ermittelt alle Dateien mit bestimmter Endung im gegebenen Verzeichnis.
+
+    :param directory: Verzeichnis, das durchsucht werden soll
+    :param endswith: Endung, die gesucht werden soll
+    :return: Liste mit gefundenen Dateien oder False (Fehler oder nichts dort)
+    """
     try:
         # Prüfen, ob der Ordner existiert
         if not os.path.exists(directory):
@@ -119,9 +151,15 @@ def list_files(directory: str, endswith = ""):
 
 
 def print_dataset(dataset):
+    """
+    Ausgabe aller Bilder im Datensatz
+
+    :param dataset:
+    :return:
+    """
     # Durch das Dataset iterieren
     for record in dataset:
-        # Werte auslesen und den ersten Wert verwerfen
+        # Werte auslesen und den ersten Wert (Zahl, die das Bild darstellen soll) verwerfen
         pixel_values = record.split(',')
         pixel_values = pixel_values[1:]
         # Bilder ausgeben
@@ -129,19 +167,34 @@ def print_dataset(dataset):
 
 
 def print_image(pixel_values):
-    # Anzeige der Zahl mit Matplotlib
-    image_array = numpy.asarray(pixel_values, dtype="float").reshape((28, 28))
+    """
+    Anzeige der Pixelwerte mit Matplotlib als Plot mit 28 x 28 Pixel
+
+    :param pixel_values: Liste von 784 Pixelwerten (0-255), die das Eingabebild repräsentieren
+    :return: None
+    """
+    image_array = np.asarray(pixel_values, dtype="float").reshape((28, 28))
     plt.imshow(image_array, cmap="Greys", interpolation="None")
     plt.show()
 
 
-def ask_neuralnetwork(pixel_values: list, min_confidence: float = 0, display: bool = False, print_output: bool = True):
+def ask_neuralnetwork(p_neuralnetwork, pixel_values: list, min_confidence: float = 0,
+                      display: bool = False, print_output: bool = True):
+    """
+    Befragt das neuronale Netzwerk, um die eingegebenen Pixelwerte zu klassifizieren.
+
+    :param pixel_values: Liste von 784 Pixelwerten (0-255), die das Eingabebild repräsentieren
+    :param min_confidence: minimaler Wert (0.0 bis 1.0), um das ermittelte Ergebnis zu akzeptieren
+    :param display: ob eine Visualisierung des Lernfortschritts erstellt werden soll
+    :param print_output: ermittelten Wahrscheinlichkeiten für jede Ziffer in der Konsole ausgegeben
+    :return: erkannte Ziffer als Integer (0-9) oder -1, falls die Konfidenz zu niedrig war
+    """
     cnn_guess = {"number": -1, "confidence":0}
     # Anzeige der Zahl mit Matplotlib
     if display:
         print_image(pixel_values)
     # Query an das CNN
-    outputs = n.query((numpy.asarray(pixel_values, dtype="float") / 255.0 * 0.99) + 0.01)
+    outputs = p_neuralnetwork.query((np.asarray(pixel_values, dtype="float") / 255.0 * 0.99) + 0.01)
     # Ausgabe der Werte
     counter = 0
     highest_value = np.float64(0)
@@ -160,20 +213,29 @@ def ask_neuralnetwork(pixel_values: list, min_confidence: float = 0, display: bo
     return cnn_guess["number"]
 
 
-def test_neuralnetwork(test_dataset, print_output: bool = True, plot: bool = False):
+def test_neuralnetwork(p_neuralnetwork, test_dataset,
+                       print_output: bool = True, plot: bool = False):
+    """
+    Testet das NN mit einem vorgegebenen Datensatz, um zu bestimmen, wie gut das NN ist.
+
+    :param test_dataset: der Datensatz (nicht die Datei!) als Liste
+    :param print_output: ob der CLI output ausgegeben werden soll
+    :param plot: ob der Plot gezeichnet werden soll
+    :return: Performance als float von 0 (schlechteste) bis 1 (beste)
+    """
     if not test_dataset:
-        return 0
+        return False
     if print_output:
-        print(f"Testing neural network...")
+        print("Testing neural network...")
     # Eine Scorecard zur Bestimmung der Leistung
     scorecard = []
 
     # Durch alle records im Dataset gehen und testen
     for record in test_dataset:
         all_values = record.split(',')
-        # Der erste Wert ist die Zahl die wir suchen
+        # Der erste Wert ist die Zahl, die wir suchen
         correct_label = int(all_values[0])
-        label = ask_neuralnetwork(all_values[1:], display=plot, print_output=False)
+        label = ask_neuralnetwork(p_neuralnetwork ,all_values[1:], display=plot, print_output=False)
         # append correct or incorrect to list
         if label == correct_label:
             # network's answer matches correct answer, add 1 to scorecard
@@ -181,43 +243,50 @@ def test_neuralnetwork(test_dataset, print_output: bool = True, plot: bool = Fal
         else:
             # network's answer doesn't match correct answer, add 0 to scorecard
             scorecard.append(0)
-            pass
-
-        pass
     # calculate the performance score, the fraction of correct answers
-    scorecard_array = numpy.asarray(scorecard)
-    performance = numpy.mean(scorecard_array)
+    scorecard_array = np.asarray(scorecard)
+    performance = np.mean(scorecard_array)
     if print_output:
         print(f"Performance = {performance:.2%}\n")
     return performance
 
 
 def read_dataset(file_path: str):
-    """Auslesen des Datensatzes mit Fehlerbehandlung. Erwartet wird eine CSV-Datei,
+    """
+    Auslesen des Datensatzes mit Fehlerbehandlung. Erwartet wird eine CSV-Datei,
     die die Zahl und die Werte beinhaltet.
+
+    :param file_path: Pfad, in dem sich der Datensatz als CSV-Datei befindet
+    :return: Datensatz als Liste, oder False bei einem Fehler
     """
     try:
-        data_file = open(file_path, "r")
-        data_list = data_file.readlines()
-        data_file.close()
-        return data_list
+        with open(file_path, "r", encoding="utf-8") as data_file:
+            # Jede Zeile ist ein Bild (weiß auf schwarz) mit der Zahl als ersten Eintrag
+            return data_file.readlines()
     except FileNotFoundError as e_read_dataset:
-        print(
-            f"Error: {e_read_dataset.strerror} for path: {e_read_dataset.filename}. \nMake sure the file exists and is accessible.")
+        print(f"Error: {e_read_dataset.strerror} for path: "
+              f"{e_read_dataset.filename}. \nMake sure the file exists and is accessible.")
+        return False
     except IOError as e_read_dataset:
         print(f"Unexpected Error: {e_read_dataset.strerror} for path: {e_read_dataset.filename}.")
+        return False
 
 
 def print_help():
-    """Zeigt die Hilfe an"""
+    """
+    Zeigt die Hilfe an
+
+    :return: None
+    """
     help_data = {
-        "Command": ["Train", "Test", "Ask", "Save", "Load", "Reset", "End", "Help"],
+        "Command": ["Train", "Test", "Ask", "Save", "Load", "Delete", "Reset", "End", "Help"],
         "Description": [
             "Trains the network",
             "Tests the network with test data",
             "Asks the neural network to analyze an image",
             "Saves the neural networks' weights in 'models/'",
             "Loads the weights in 'models/'",
+            "Deletes the specified weights in 'models/'",
             "Resets the network's weights",
             "Exits the program",
             "Shows the help"
@@ -229,22 +298,23 @@ def print_help():
     print("--- Available Commands ---" + "-" * (61 - 26))
     # index=False entfernt die Zeilennummern (0, 1, 2...)
     print(df.to_string(index=False, justify='left',
-                       formatters={'Command': lambda x: f"{x:<10}", 'Description': lambda x: f"{x:<50}"}))
+                       formatters={'Command': lambda x: f"{x:<10}",
+                                   'Description': lambda x: f"{x:<50}"}))
     # Trennlinie genau passend zur Tabellenbreite (10 + 1 + 50 = 61)
     print("-" * 61 + "\n")
 
 
 # 1. INIT
 # Erzeuge neuronales Netzwerkobjekt n mit der Anzahl der Pixel als Anzahl der Nodes im Input Layer.
-# Wir setzen voraus, dass alle Bilder die gleiche Größe haben und eine Zahl von 0 bis 9 gefunden werden soll
-n_pixel = 784
-n_output = 10
-n = initiate_neuralnetwork(n_pixel, n_output)
+# Wir setzen voraus, dass alle Bilder die gleiche Größe haben
+# und eine Zahl von 0 bis 9 gefunden werden soll
+n = initiate_neuralnetwork(N_PIXEL, N_OUTPUT)
 
 # 2. MAIN LOOP
 while True:
     try:
-        user_input = input(f"What do you want to do? [Train|Test|Ask|Save|Load|Reset|End|Help]\n")
+        user_input = input("What do you want to do? "
+                           "[Train|Test|Ask|Save|Load|Delete|Reset|End|Help]\n")
         match repm.REqual(user_input):
             case r'^[T|t]rain':
                 # Benutzerabfrage
@@ -252,20 +322,20 @@ while True:
                     n_epochs = int(input("How many epochs do you want to train?\n"))
                     visualize = input("Do you want visualization? [True|False]\n")
                 except ValueError as e:
-                    print(f"Error in user input. Try again!")
+                    print("Error in user input. Try again!")
                     break
 
                 # Da beim Visualisieren ein anderer Ansatz gewählt wird, hier unterscheiden
                 if visualize == "True":
                     accuracy_data = {}
                     test_list = read_dataset(TEST_DATASET)
-                    accuracy = test_neuralnetwork(test_list, False)
+                    accuracy = test_neuralnetwork(n, test_list, False)
                     accuracy_data[0] = accuracy
                     print(f"Epoch {0}: Accuracy = {accuracy:.2%}")
                     # Trainieren mit jeweils einer Epoche für accuracy Daten
                     for epoch in range(n_epochs):
-                        train_neuralnetwork(epochs=1, print_output=False)
-                        accuracy = test_neuralnetwork(test_list, False)
+                        train_neuralnetwork(p_neuralnetwork=n, epochs=1, print_output=False)
+                        accuracy = test_neuralnetwork(n, test_list, False)
                         accuracy_data[epoch + 1] = accuracy
 
                         print(f"Epoch {epoch + 1}: Accuracy = {accuracy:.2%}")
@@ -275,12 +345,14 @@ while True:
 
                 else:
                     # Neuronales Netzwerk trainieren
-                    train_neuralnetwork(epochs=n_epochs)
+                    train_neuralnetwork(p_neuralnetwork=n, epochs=n_epochs)
             case r'^[T|t]est':
                 # Neuronales Netzwerk testen
-                # Testdatensatz einlesen (Besteht aus einer CSV mit einer Zahl und einem Bild für die Zahl pro Zeile)
+
+                # Testdatensatz einlesen
+                # (Besteht aus einer CSV mit einer Zahl und einem Bild für die Zahl pro Zeile)
                 test_list = read_dataset(TEST_DATASET)
-                test_neuralnetwork(test_list)
+                test_neuralnetwork(n, test_list)
             case r'^[A|a]sk':
                 img_files = list_files(PIC_DIR, ".png")
                 if img_files:
@@ -295,7 +367,7 @@ while True:
                     filename = filename + ".png"
                 img = il.ImageLoader(os.path.join(PIC_DIR, filename))
                 img_values = img.get_pixel_values()
-                guess = ask_neuralnetwork(img_values, 0.4,True, True)
+                guess = ask_neuralnetwork(n, img_values, 0.4,True, True)
                 if not guess == -1:
                     print(f"The neural network thinks this is a: {guess}.\n")
                 else:
@@ -312,7 +384,8 @@ while True:
                     print(f"Found {len(models)} model(s):")
                     for model in models:
                         print(f"  -> {model}")
-                filename = input("Please type in the file name (existing files will be overwritten!): ").strip()
+                filename = input("Please type in the file name "
+                                 "(existing files will be overwritten!): ").strip()
                 if not filename:
                     filename = "weights.npz"
                 n.save_weights(filename)
@@ -332,7 +405,7 @@ while True:
                         filename += ".npz"
                     n.load_weights(filename)
                 else:
-                    print(f"No models found.")
+                    print("No models found.")
             case r'^[D|d]elete':
                 # Find models in directory
                 models = list_files(MODELS_DIR, ".npz")
@@ -352,19 +425,19 @@ while True:
                     except FileNotFoundError as e:
                         print(f"File not found: {e.filename}")
                 else:
-                    print(f"No models found.")
+                    print("No models found.")
             case r'^[R|r]eset':
                 # This will reset the neural network by creating a new neural_network object
-                print(f"Resetting CNN with ID: {n.__hash__()}.")
-                n = initiate_neuralnetwork(n_pixel, n_output)
-                print(f"New CNN ID: {n.__hash__()}.\n")
+                print(f"Resetting CNN with ID: {hash(n)}.")
+                n = initiate_neuralnetwork(N_PIXEL, N_OUTPUT)
+                print(f"New CNN ID: {hash(n)}.\n")
             case r'^[E|e]nd|^[E|e]xit':
-                print(f"Exiting...")
-                exit(0)
+                print("Exiting...")
+                sys.exit(0)
             case r'^[H|h]elp':
                 print_help()
             case _:
                 print(f"Command not recognized: {user_input}. Type 'Help' for help.")
     except KeyboardInterrupt:
-        print(f"User interrupted")
-        exit(0)
+        print("User interrupted")
+        sys.exit(0)
