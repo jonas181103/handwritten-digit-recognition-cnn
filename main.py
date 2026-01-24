@@ -25,8 +25,8 @@ __author__ = "Jonas Ott, Simon Wameling, ..."
 MODELS_DIR = "models"
 VISUALIZATION_DIR = "data/visualisation/"
 PIC_DIR = "data/pictures/"
-TRAIN_DATASET = os.path.join("data/raw/mnist_data/echtdaten", "mnist_train.csv")
-TEST_DATASET = os.path.join("data/raw/mnist_data/echtdaten", "mnist_test.csv")
+TRAIN_DATASET = os.path.join("data/raw/mnist_data/echtdaten", "mnist_test.csv")
+TEST_DATASET = os.path.join("data/raw/mnist_data/testdaten", "mnist_train_100.csv")
 # Globale Werte für das neuronale Netzwerk
 N_PIXEL = 784
 N_OUTPUT = 10
