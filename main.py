@@ -25,11 +25,13 @@ __author__ = "Jonas Ott, Simon Wameling, ..."
 MODELS_DIR = "models"
 VISUALIZATION_DIR = "data/visualisation/"
 PIC_DIR = "data/pictures/"
-TRAIN_DATASET = os.path.join("data/raw/mnist_data/echtdaten", "mnist_test.csv")
-TEST_DATASET = os.path.join("data/raw/mnist_data/testdaten", "mnist_train_100.csv")
+TRAIN_DATASET = os.path.join("data/raw/mnist_data/echtdaten", "mnist_train.csv")
+TEST_DATASET = os.path.join("data/raw/mnist_data/echtdaten", "mnist_test.csv")
 # Globale Werte für das neuronale Netzwerk
 N_PIXEL = 784
 N_OUTPUT = 10
+START_LEARNING_RATE = 0.3
+DECAY_RATE = 0.4
 
 
 def create_plot(accuracy_dictionary):
@@ -77,7 +79,7 @@ def create_plot(accuracy_dictionary):
 
 
 def initiate_neuralnetwork(p_input_nodes: int, p_output_nodes: int, **kwargs):
-    """ Berechnet die Anzahl derv Hidden Nodes für das neuronale Netzwerk
+    """ Berechnet die Anzahl der Hidden Nodes für das neuronale Netzwerk
      anhand von Input und Output und erstellt ein NN-Objekt.
 
     :param p_input_nodes: Anzahl der Input-Nodes des neuronalen Netzwerks
@@ -94,8 +96,7 @@ def initiate_neuralnetwork(p_input_nodes: int, p_output_nodes: int, **kwargs):
     neural_network = nn.NeuralNetwork(input_nodes, hidden_nodes, output_nodes, learning_rate)
     return neural_network
 
-
-def train_neuralnetwork(p_neuralnetwork, dataset_file=TRAIN_DATASET,
+def train_neuralnetwork_old(p_neuralnetwork, dataset_file=TRAIN_DATASET,
                         epochs: int = 5, print_output: bool = True):
     """
     Funktion zum Vorbereiten vom Trainieren des neuronalen Netzwerks mittels train() im NN-Objekt.
@@ -112,6 +113,8 @@ def train_neuralnetwork(p_neuralnetwork, dataset_file=TRAIN_DATASET,
         return
     if print_output:
         print(f"Training neural network with dataset \"{dataset_file}\" in {epochs} epochs")
+    # Target Numpy-Array hier erstellen, damit nicht pro Durchlauf ein neues Array erstellt wird
+    targets = np.zeros(p_neuralnetwork.out_nodes) + 0.01
     for i in range(epochs):
         # Alle Zeilen im Dataset sind ein record und repräsentieren eine Zahl
         for record in training_data_list:
@@ -119,14 +122,71 @@ def train_neuralnetwork(p_neuralnetwork, dataset_file=TRAIN_DATASET,
             # Konvertiere Pixeldaten 0-255 zu float 0-1
             inputs = (np.asarray(pixel_values[1:], float) / 255.0 * 0.99) + 0.01
             # Ziel festlegen: alle Werte des Outputs auf 0.01 außer der gewünschte Wert
-            targets = np.zeros(p_neuralnetwork.out_nodes) + 0.01
+            targets.fill(0.01)
             targets[int(pixel_values[0])] = 0.99
             # Neurales Netzwerk trainieren
             p_neuralnetwork.train(inputs, targets)
+        # Anzahl der gelernten Epochen im nn-Objekt hochsetzen
+        p_neuralnetwork.epoch += 1
         if print_output:
-            print(f"Epoch {i + 1} done")
+            print(f"Epoch {i + 1} done. Learning rate was: {p_neuralnetwork.lr}")
+            # Anpassung der Lernrate, sodass automatisch verringert wird, je höher die Epoche
+        p_neuralnetwork.lr = START_LEARNING_RATE * (1 / (1 + DECAY_RATE * p_neuralnetwork.epoch))
     if print_output:
-        print("Training finished.\n")
+        print(f"Training finished. Total epochs of network: {p_neuralnetwork.epoch}\n")
+
+def train_neuralnetwork(p_neuralnetwork, dataset_file=TRAIN_DATASET,
+                        epochs: int = 5, print_output: bool = True):
+    """
+    Funktion zum Vorbereiten vom Trainieren des neuronalen Netzwerks mittels train() im NN-Objekt.
+
+    :param p_neuralnetwork: NN-Objekt, dass trainiert werden soll
+    :param dataset_file: Datei, die das Dataset enthält (csv)
+    :param epochs: für wie viele Epochen trainiert wird
+    :param print_output: soll Rückmeldung per print gegeben werden?
+    :return: None
+    """
+    # --- Daten laden ---
+    training_data_list = read_dataset(dataset_file)
+    # Prüfen, ob das Dataset richtig gelesen wurde
+    if training_data_list is None:
+        return
+
+    # --- Daten vorbereiten ---
+    # Target Numpy-Array hier erstellen, damit nicht pro ...
+    # Trainingsdurchlauf ein neues Array erstellt wird
+    targets = np.zeros(p_neuralnetwork.out_nodes) + 0.01
+    prepared_data = []
+    # Alle Zeilen im Dataset sind ein record und repräsentieren eine Zahl
+    for record in training_data_list:
+        # Pixelwerte der einzelnen Zahlen extrahieren
+        pixel_values = record.split(',')
+        # Input berechnen (Konvertiere Pixeldaten 0-255 zu float 0-1)
+        inputs = (np.asarray(pixel_values[1:], float) / 255.0 * 0.99) + 0.01
+        # Das Label (die korrekte Zahl) merken
+        label = int(pixel_values[0])
+        # Als Tupel speichern
+        prepared_data.append((inputs, label))
+
+    # --- Trainieren ---
+    if print_output:
+        print(f"Training neural network with dataset \"{dataset_file}\" in {epochs} epochs")
+    for i in range(epochs):
+        for inputs, label in prepared_data:
+            # Ziel festlegen: Wir setzen targets so, wie das neuronale Netzwerk ...
+            # uns eigentlich antworten soll, also alles auf 0.01 außer dem richtigen Wert
+            targets.fill(0.01)
+            targets[label] = 0.99
+            # Neurales Netzwerk trainieren
+            p_neuralnetwork.train(inputs, targets)
+        # Anzahl der gelernten Epochen im nn-Objekt hochsetzen
+        p_neuralnetwork.epoch += 1
+        if print_output:
+            print(f"Epoch {i + 1} done. Learning rate was: {p_neuralnetwork.lr}")
+        # Anpassung der Lernrate, sodass automatisch verringert wird, je höher die Epoche
+        p_neuralnetwork.lr = START_LEARNING_RATE * (1 / (1 + DECAY_RATE * p_neuralnetwork.epoch))
+    if print_output:
+        print(f"Training finished. Total epochs of network: {p_neuralnetwork.epoch}\n")
 
 
 def list_files(directory: str, endswith = ""):
@@ -318,7 +378,7 @@ def print_help():
 # Erzeuge neuronales Netzwerkobjekt n mit der Anzahl der Pixel als Anzahl der Nodes im Input Layer.
 # Wir setzen voraus, dass alle Bilder die gleiche Größe haben
 # und eine Zahl von 0 bis 9 gefunden werden soll
-my_nn = initiate_neuralnetwork(N_PIXEL, N_OUTPUT)
+my_nn = initiate_neuralnetwork(N_PIXEL, N_OUTPUT, learning_rate=START_LEARNING_RATE)
 
 # 2. MAIN LOOP
 while True:
@@ -343,15 +403,15 @@ while True:
                     accuracy_data = {}
                     test_list = read_dataset(TEST_DATASET)
                     accuracy = test_neuralnetwork(my_nn, test_list, False)
-                    accuracy_data[0] = accuracy
-                    print(f"Epoch {0}: Accuracy = {accuracy:.2%}")
+                    accuracy_data[my_nn.epoch] = accuracy
+                    print(f"Epoch {my_nn.epoch}: Accuracy = {accuracy:.2%}")
                     # Trainieren mit jeweils einer Epoche für accuracy Daten
                     for epoch in range(n_epochs):
                         train_neuralnetwork(p_neuralnetwork=my_nn, epochs=1, print_output=False)
                         accuracy = test_neuralnetwork(my_nn, test_list, False)
-                        accuracy_data[epoch + 1] = accuracy
+                        accuracy_data[my_nn.epoch] = accuracy
 
-                        print(f"Epoch {epoch + 1}: Accuracy = {accuracy:.2%}")
+                        print(f"Epoch {my_nn.epoch}: Accuracy = {accuracy:.2%}")
 
                     # Visualisieren
                     create_plot(accuracy_data)

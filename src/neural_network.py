@@ -4,7 +4,7 @@ import os
 import numpy
 import scipy
 
-# Neuronales Netz Klassen Definition
+# pylint: disable=too-many-instance-attributes
 class NeuralNetwork:
     """
     Diese Klasse soll ein neuronales Netzwerk repräsentieren.
@@ -28,6 +28,7 @@ class NeuralNetwork:
         self.in_nodes = input_nodes
         self.h_nodes = hidden_nodes
         self.out_nodes = output_nodes
+        self.epoch = int(0)
         # Ausgangspunkt für die Backpropagation: Die Funktion entnimmt ...
         # Stichproben aus einer Normalverteilung
         # Parameter: Mittelwert der Verteilung (0.0) Standardabweichung, Größe eines numpy-Arrays
