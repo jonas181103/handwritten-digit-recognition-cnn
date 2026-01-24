@@ -6,6 +6,7 @@ Inspiration für REPatternMatcher:
 https://discuss.python.org/t/structural-pattern-matching-should-permit-regex-string-matches/22700/9
 """
 
+# Imports
 # Standard-Bibliotheken importieren
 import os
 import sys
@@ -24,8 +25,9 @@ __author__ = "Jonas Ott, Simon Wameling, ..."
 MODELS_DIR = "models"
 VISUALIZATION_DIR = "data/visualisation/"
 PIC_DIR = "data/pictures/"
-TRAIN_DATASET = "data/raw/mnist_data/echtdaten/mnist_test.csv"
-TEST_DATASET = "data/raw/mnist_data/testdaten/mnist_train_100.csv"
+TRAIN_DATASET = os.path.join("data/raw/mnist_data/echtdaten", "mnist_test.csv")
+TEST_DATASET = os.path.join("data/raw/mnist_data/testdaten", "mnist_train_100.csv")
+# Globale Werte für das neuronale Netzwerk
 N_PIXEL = 784
 N_OUTPUT = 10
 
@@ -74,20 +76,21 @@ def create_plot(accuracy_dictionary):
     plt.show()
 
 
-def initiate_neuralnetwork(p_input_nodes: int, p_output_nodes: int, p_learning_rate: float = 0.3):
+def initiate_neuralnetwork(p_input_nodes: int, p_output_nodes: int, **kwargs):
     """ Berechnet die Anzahl derv Hidden Nodes für das neuronale Netzwerk
      anhand von Input und Output und erstellt ein NN-Objekt.
 
     :param p_input_nodes: Anzahl der Input-Nodes des neuronalen Netzwerks
     :param p_output_nodes: Anzahl der Output-Nodes des neuronalen Netzwerks
-    :param p_learning_rate: stellt die Lernrate des NN-Objektes ein
+    :param kwargs: optionale Parameter für die Initialisierung des NN
+    :keyword learning_rate: (float) die Lernrate des NN-Objektes (Standard: 0.3)
     :return: das neu erstellte NN-Objekt
     """
     input_nodes = p_input_nodes
     # Anzahl der Hidden Nodes wird anhand des Richtwertes für CNNs dynamisch bestimmt
     hidden_nodes = int((input_nodes + p_output_nodes) // (3 / 2))
     output_nodes = p_output_nodes
-    learning_rate = p_learning_rate
+    learning_rate = kwargs.get("learning_rate", 0.3)
     neural_network = nn.NeuralNetwork(input_nodes, hidden_nodes, output_nodes, learning_rate)
     return neural_network
 
@@ -101,9 +104,12 @@ def train_neuralnetwork(p_neuralnetwork, dataset_file=TRAIN_DATASET,
     :param dataset_file: Datei, die das Dataset enthält (csv)
     :param epochs: für wie viele Epochen trainiert wird
     :param print_output: soll Rückmeldung per print gegeben werden?
-    :return:
+    :return: None
     """
     training_data_list = read_dataset(dataset_file)
+    # Prüfen, ob das Dataset richtig gelesen wurde
+    if training_data_list is None:
+        return
     if print_output:
         print(f"Training neural network with dataset \"{dataset_file}\" in {epochs} epochs")
     for i in range(epochs):
@@ -113,7 +119,7 @@ def train_neuralnetwork(p_neuralnetwork, dataset_file=TRAIN_DATASET,
             # Konvertiere Pixeldaten 0-255 zu float 0-1
             inputs = (np.asarray(pixel_values[1:], float) / 255.0 * 0.99) + 0.01
             # Ziel festlegen: alle Werte des Outputs auf 0.01 außer der gewünschte Wert
-            targets = np.zeros(my_nn.onodes) + 0.01
+            targets = np.zeros(p_neuralnetwork.out_nodes) + 0.01
             targets[int(pixel_values[0])] = 0.99
             # Neurales Netzwerk trainieren
             p_neuralnetwork.train(inputs, targets)
@@ -137,7 +143,7 @@ def list_files(directory: str, endswith = ""):
             print(f"Directory '{directory}' does not exist.")
             return False
 
-        # Dateien im Ordner scannen
+        # Dateien aus "directory" mit list-comprehension in "files" speichern
         files = [f for f in os.listdir(directory) if
                  os.path.isfile(os.path.join(directory, f)) and f.endswith(endswith)]
 
@@ -155,16 +161,13 @@ def print_dataset(dataset):
     """
     Ausgabe aller Bilder im Datensatz
 
-    :param dataset:
-    :return:
+    :param dataset: der Datensatz, der ausgegeben werden soll
+    :return: None
     """
     # Durch das Dataset iterieren
     for record in dataset:
         # Werte auslesen und den ersten Wert (Zahl, die das Bild darstellen soll) verwerfen
-        pixel_values = record.split(',')
-        pixel_values = pixel_values[1:]
-        # Bilder ausgeben
-        print_image(pixel_values)
+        print_image(record.split(',')[1:])
 
 
 def print_image(pixel_values):
@@ -179,18 +182,22 @@ def print_image(pixel_values):
     plt.show()
 
 
-def ask_neuralnetwork(p_neuralnetwork, pixel_values: list, min_confidence: float = 0,
-                      display: bool = False, print_output: bool = True):
+def ask_neuralnetwork(p_neuralnetwork: nn.NeuralNetwork, pixel_values: list, **kwargs):
     """
     Befragt das neuronale Netzwerk, um die eingegebenen Pixelwerte zu klassifizieren.
 
     :param p_neuralnetwork: NN-Objekt, dass befragt werden soll
     :param pixel_values: Liste von 784 Pixelwerten (0-255), die das Eingabebild repräsentieren
-    :param min_confidence: minimaler Wert (0.0 bis 1.0), um das ermittelte Ergebnis zu akzeptieren
-    :param display: ob eine Visualisierung des Lernfortschritts erstellt werden soll
-    :param print_output: ermittelten Wahrscheinlichkeiten für jede Ziffer in der Konsole ausgegeben
-    :return: erkannte Ziffer als Integer (0-9) oder -1, falls die Konfidenz zu niedrig war
+    :param kwargs: optionale Konfiguration für die Ausgabe und Steuerung
+    :keyword min_confidence: (float) min. Wert (0.0-1.0) zum Akzeptieren (Standard: 0)
+    :keyword display: (bool) ob das Bild visualisiert werden soll (Standard: False)
+    :keyword print_output: (bool) ob Text-Output in der Konsole erfolgen soll (Standard: True)
     """
+
+    # Defaults aus kwargs ziehen (Key, Default-Wert)
+    min_confidence = kwargs.get('min_confidence', 0)
+    display = kwargs.get('display', False)
+    print_output = kwargs.get('print_output', True)
     cnn_guess = {"number": -1, "confidence":0}
     # Anzeige der Zahl mit Matplotlib
     if display:
@@ -237,7 +244,7 @@ def test_neuralnetwork(p_neuralnetwork, test_dataset,
         all_values = record.split(',')
         # Der erste Wert ist die Zahl, die wir suchen
         correct_label = int(all_values[0])
-        label = ask_neuralnetwork(p_neuralnetwork ,all_values[1:], display=plot, print_output=False)
+        label = ask_neuralnetwork(p_neuralnetwork, all_values[1:], display=plot, print_output=False)
         # append correct or incorrect to list
         if label == correct_label:
             # network's answer matches correct answer, add 1 to scorecard
@@ -257,21 +264,22 @@ def read_dataset(file_path: str):
     """
     Auslesen des Datensatzes mit Fehlerbehandlung. Erwartet wird eine CSV-Datei,
     die die Zahl und die Werte beinhaltet.
+    Hinweis: Jede Zeile ist ein Bild (weiß auf schwarz) mit der Zahl als ersten Eintrag.
 
     :param file_path: Pfad, in dem sich der Datensatz als CSV-Datei befindet
     :return: Datensatz als Liste, oder False bei einem Fehler
     """
     try:
         with open(file_path, "r", encoding="utf-8") as data_file:
-            # Jede Zeile ist ein Bild (weiß auf schwarz) mit der Zahl als ersten Eintrag
-            return data_file.readlines()
+            # Verwerfen von Zeilenumbrüchen und leeren Zeilen, dann zurückgeben
+            return [line for line in map(str.strip, data_file) if line]
     except FileNotFoundError as e_read_dataset:
         print(f"Error: {e_read_dataset.strerror} for path: "
               f"{e_read_dataset.filename}. \nMake sure the file exists and is accessible.")
-        return False
+        return None
     except IOError as e_read_dataset:
         print(f"Unexpected Error: {e_read_dataset.strerror} for path: {e_read_dataset.filename}.")
-        return False
+        return None
 
 
 def print_help():
@@ -316,12 +324,15 @@ my_nn = initiate_neuralnetwork(N_PIXEL, N_OUTPUT)
 while True:
     try:
         user_input = input("What do you want to do? "
-                           "[Train|Test|Ask|Save|Load|Delete|Reset|End|Help]\n")
+                           "[Train|Test|Ask|Save|Load|Delete|Reset|End|Help]\n").strip()
         match repm.REqual(user_input):
             case r'^[T|t]rain':
                 # Benutzerabfrage
                 try:
-                    n_epochs = int(input("How many epochs do you want to train?\n"))
+                    n_epochs = input("How many epochs do you want to train? (Standard: 5)\n")
+                    if not n_epochs:
+                        n_epochs = 5
+                    n_epochs = int(n_epochs)
                     visualize = input("Do you want visualization? [True|False]\n")
                 except ValueError as e:
                     print("Error in user input. Try again!")
@@ -349,11 +360,10 @@ while True:
                     # Neuronales Netzwerk trainieren
                     train_neuralnetwork(p_neuralnetwork=my_nn, epochs=n_epochs)
             case r'^[T|t]est':
-                # Neuronales Netzwerk testen
-
-                # Testdatensatz einlesen
+                # Testdatensatz einlesen, falls noch nicht geschehen
                 # (Besteht aus einer CSV mit einer Zahl und einem Bild für die Zahl pro Zeile)
                 test_list = read_dataset(TEST_DATASET)
+                # Neuronales Netzwerk testen
                 test_neuralnetwork(my_nn, test_list)
             case r'^[A|a]sk':
                 img_files = list_files(PIC_DIR, ".png")
@@ -362,18 +372,24 @@ while True:
                     for img in img_files:
                         print(f"  -> {img}")
                 filename = input("Please type in the file name to load: ").strip()
-                if not filename:
-                    print("That is not a valid filename. Try again!")
-                    break
                 if not filename.endswith(".png"):
                     filename = filename + ".png"
-                img = il.ImageLoader(os.path.join(PIC_DIR, filename))
-                img_values = img.get_pixel_values()
-                guess = ask_neuralnetwork(my_nn, img_values, 0.4, True, True)
-                if not guess == -1:
-                    print(f"The neural network thinks this is a: {guess}.\n")
-                else:
-                    print("The neural network wasn't confident enough to make a guess.")
+                guess = None
+                try:
+                    img_obj = il.ImageLoader(os.path.join(PIC_DIR, filename))
+                    img_values = img_obj.get_pixel_values()
+                    guess = ask_neuralnetwork(my_nn, img_values, min_confidence=0.4, display=True)
+                except ValueError as e:
+                    print(f"Error: {e}")
+                except FileNotFoundError as e:
+                    print(f"Error: {e.strerror}")
+                match guess:
+                    case -1:
+                        print("The neural network was not confident enough to make a guess.")
+                    case None:
+                        print("Not possible to guess.")
+                    case _:
+                        print(f"The neural network thinks this is a: {guess}.\n")
             case r'datasets':
                 # For Debugging
                 print("Test:")
@@ -440,6 +456,17 @@ while True:
                 print_help()
             case _:
                 print(f"Command not recognized: {user_input}. Type 'Help' for help.")
-    except KeyboardInterrupt:
+    except KeyboardInterrupt:   # Bedeutet, dass Benutzer das Programm unterbrechen will (CTRL+C)
         print("User interrupted")
         sys.exit(0)
+
+    # pylint: disable=broad-except
+    except Exception:   # Alle anderen Fehler abfangen, damit das Programm nicht abstürzt
+        # Traceback on the fly importieren, damit ein Traceback ausgegeben werden kann
+        import traceback
+
+        print("Unexpected Error!")
+        # Traceback ausgeben für besseres Troubleshooting
+        traceback.print_exc()
+        print("Trying to continue...")
+        continue

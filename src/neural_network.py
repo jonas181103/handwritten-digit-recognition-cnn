@@ -13,32 +13,32 @@ class NeuralNetwork:
     """
 
     # Initialisierung des neuronalen Netzes
-    def __init__(self, inputnodes = 784, hiddennodes = 600, outputnodes = 10, learningrate = 0.3):
+    def __init__(self, input_nodes=784, hidden_nodes=600, output_nodes=10, learning_rate=0.3):
         """
         Initialisierung der Gewichtungsmatrizen (wih und who) des neuronalen Netzes mit
         kleinen zufälligen Werten zwischen -0.5 und 0.5 (zufällig), um die Symmetrie
         der Eingaben zu verhindern.
 
-        :param inputnodes: Anzahl der Eingabewerte das NN-Objekt erwartet
-        :param hiddennodes: Anzahl der Nodes in der Hidden Layer
-        :param outputnodes: Anzahl der Ausgabe-Nodes
-        :param learningrate: Lernrate des NN-Objektes
+        :param input_nodes: Anzahl der Eingabewerte das NN-Objekt erwartet
+        :param hidden_nodes: Anzahl der Nodes in der Hidden Layer
+        :param output_nodes: Anzahl der Ausgabe-Nodes
+        :param learning_rate: Lernrate des NN-Objektes
         """
         # Anzahl der Knoten in der Eingabeschicht, der versteckten Schicht und Ausgabeschicht
-        self.inodes = inputnodes
-        self.hnodes = hiddennodes
-        self.onodes = outputnodes
+        self.in_nodes = input_nodes
+        self.h_nodes = hidden_nodes
+        self.out_nodes = output_nodes
         # Ausgangspunkt für die Backpropagation: Die Funktion entnimmt ...
         # Stichproben aus einer Normalverteilung
         # Parameter: Mittelwert der Verteilung (0.0) Standardabweichung, Größe eines numpy-Arrays
         self.wih = numpy.random.normal(
-            0.0, pow(self.hnodes, -0.5), (self.hnodes, self.inodes)
+            0.0, pow(self.h_nodes, -0.5), (self.h_nodes, self.in_nodes)
         )
         self.who = numpy.random.normal(
-            0.0, pow(self.onodes, -0.5), (self.onodes, self.hnodes)
+            0.0, pow(self.out_nodes, -0.5), (self.out_nodes, self.h_nodes)
         )
         # Lernrate
-        self.lr = learningrate
+        self.lr = learning_rate
         # Lambda-Ausdruck, um die Aktivierungsfunktion zu speichern
         self.activation_function = lambda x: scipy.special.expit(x)
 
@@ -90,7 +90,7 @@ class NeuralNetwork:
         das neuronale Netz und liefert die Ausgabe des Netzes zurück)
 
         :param inputs_list:
-        :return: Liefert ein Tupel der Ausgabe zurück
+        :return: Liefert einen Tupel der Ausgabe zurück
         (Anzahl der Elemente hängt von der Anzahl der Output Layers ab)
         """
         # Konvertierung der Eingaben in einen 2D-Array

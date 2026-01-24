@@ -1,6 +1,6 @@
 """ Stellt die Klasse ImageLoader bereit. """
 
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 
 class ImageLoader:
@@ -9,11 +9,22 @@ class ImageLoader:
     """
 
     def __init__(self, filename):
+        self.img = None
+        # Dateinamen aktualisieren lädt auch gleichzeitig das Bild
         self.filename = filename
+
+    def _update_image(self):
+        """
+        Öffnet das Bild und kopiert den Inhalt in die self.img Variable
+
+        :return: None
+        """
         try:
-            self.img = Image.open(self.filename)
-        except FileNotFoundError as e:
-            print(e)
+            with Image.open(self.filename) as img:
+                self.img = img.copy()
+        except UnidentifiedImageError as exc:
+            raise ValueError(f"File '{self.filename}' is not a valid image file'") from exc
+
 
     def get_pixel_values(self, invert=True):
         """
@@ -33,17 +44,22 @@ class ImageLoader:
         # Das Bild als Liste der Werte zurückgeben
         return grayscale_img.getdata()
 
-    def get_filename(self):
+    @property
+    def filename(self):
         """
         :return: den gespeicherten Dateinamen
         """
-        return self.filename
+        return self._filename
 
-    def set_filename(self, new_filename):
+    @filename.setter
+    def filename(self, new_filename):
         """
         Überschreibt den gespeicherten Dateinamen mit einem neuen Dateinamen
 
         :param new_filename: neuer Dateiname
         :return: None
         """
-        self.filename = new_filename
+        if not new_filename:
+            raise ValueError("Filename must not be empty")
+        self._filename = new_filename
+        self._update_image()

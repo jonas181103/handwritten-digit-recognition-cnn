@@ -2,3 +2,4 @@
 *
 # To not ignore this file itself
 !.gitignore
+!mnist_test.csv
