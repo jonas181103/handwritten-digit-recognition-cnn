@@ -1,0 +1,4 @@
+[MASTER]
+# Dieser Hook fügt das aktuelle Verzeichnis zum Python-Pfad hinzu,
+# bevor Pylint startet. Damit werden Module wie 'src' gefunden.
+init-hook='import sys; sys.path.append(".")'
