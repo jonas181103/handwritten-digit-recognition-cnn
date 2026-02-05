@@ -1,7 +1,7 @@
 # Implementierung eines Convolutional-Neural-Networks  (CNN) zur Klassifikation handschriftlicher Ziffern
 
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue)](https://www.python.org/)
-[![Status](https://img.shields.io/badge/Status-Finished)]()
+[![Status](https://img.shields.io/badge/Status-Finished-Finished)]()
 
 ---
 
