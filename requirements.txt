@@ -17,6 +17,9 @@ scipy
 # Image loading
 pillow
 
+# Qt6 (needed for non Windows systems to show the plot)
+PyQt6
+
 # Standard Bibliotheken:
 # re
 # os
